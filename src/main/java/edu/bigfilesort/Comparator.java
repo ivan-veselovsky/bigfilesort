@@ -2,6 +2,10 @@ package edu.bigfilesort;
 
 import java.io.IOException;
 
+/**
+ * Used in Net Sorting, where each comparator 
+ * compares and swaps (if needed) 2 values. 
+ */
 public interface Comparator {
 
   /**
