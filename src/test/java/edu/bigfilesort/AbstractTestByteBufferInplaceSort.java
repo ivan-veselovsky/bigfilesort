@@ -11,14 +11,31 @@ import edu.bigfilesort.WriteDataMain.Mode;
 import static org.junit.Assert.*;
 import static java.lang.System.out;
 
-// -Xms131m -Xmx131m -XX:NewRatio=81 -XX:MaxPermSize=1m
 public abstract class AbstractTestByteBufferInplaceSort {
 
+  /*
+   * Windows-32 machine allows to map only 1024 * 1024 * 192 ints (1 int == 4 bytes) .
+   * It's not quite clear, why. Freeing memory of swap increasing does not seem 
+   * to change the situation.
+   * 
+   * In CentOS-64 1024 * 1024 * 512 - 1 (== ~2G == max possible for one ByteBuffer) was allocated
+   * without any problems.
+   * 
+   * Single-thread sorting results on Windows: 
+   * 128 ints -- 137 sec
+   * 192 ints -- 215,258 sec
+   * 256 ints -- OOME 
+   * 
+   * Single-thread sorting results on CentOS:
+   * 256 ints -- 160 sec
+   * 512 ints -- 822 sec (? need to re-check) 
+   */
+  
   // Number of data values (integers)
   // NB: not necessarily power of 2.
   // 1G file <-> 1024 * 1024 * 256
   // Max possible buffer (~2G): 1024 * 1024 * 512 - 1
-  private static final int arrayLength = 1024 * 1024 * 512 - 1; 
+  private static final int arrayLength = 1024 * 1024 * 256; //512 - 1; 
   
   protected long bytePos = 0;
   protected long byteLength = ((long)arrayLength) * Main.dataLength;
@@ -92,14 +109,12 @@ public abstract class AbstractTestByteBufferInplaceSort {
     
     assertEquals(byteLength, mbb.capacity());
     
-    //mbb.position(0);
-    //mbb.limit((int)byteLength);
     return new ByteBufferInplaceSortDataProvider(mbb, -1);
   }
   
   private void writeData(WriteDataMain.Mode mode) throws Exception {
     WriteDataMain writeDataMain = new WriteDataMain();
-    assertEquals(0, writeDataMain.mainImpl(file, "" + byteLength, 
+    assertEquals(0, writeDataMain.mainImpl(file, Long.toString(byteLength), 
         mode.toString()));
   }  
   

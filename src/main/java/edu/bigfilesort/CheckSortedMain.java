@@ -37,7 +37,7 @@ public class CheckSortedMain {
     
     long delta = System.currentTimeMillis() - t;
     out.println("Sorting of ["+fileName+"] is okay.");
-    out.println("Time elapsed:  "+delta+" ms");
+    out.println("Read time:  "+delta+" ms");
     
     return 0;
   }

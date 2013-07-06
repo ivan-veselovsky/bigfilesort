@@ -10,7 +10,11 @@ import java.util.Random;
 
 public class WriteDataMain {
 
-  static final long bufferSize = 1024L * 1024L; // 1m
+  /*
+   * Size (in bytes) of the read or write buffer that
+   * is directly mapped to memory.
+   */
+  static final long bufferSize = 1024L * 1024L * 64; 
   
   enum Mode {
     asc, // ascending 
@@ -58,7 +62,7 @@ public class WriteDataMain {
     writeImpl(fileName, length, modeStr);
     
     long delta = System.currentTimeMillis() - t;
-    out.println("Time elapsed:  "+delta+" ms");
+    out.println("Write time:  "+delta+" ms");
     return 0;
   }
   
