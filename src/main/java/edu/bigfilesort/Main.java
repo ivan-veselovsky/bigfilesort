@@ -14,8 +14,8 @@ import java.util.concurrent.TimeUnit;
 
 public class Main {
   
-   public static int dataLength = 4;
-   public static ByteOrder byteOrder = ByteOrder.BIG_ENDIAN;
+   public static final int dataLength = 4;
+   public static final ByteOrder byteOrder = ByteOrder.BIG_ENDIAN;
    
    private static final long megaByte = 1024L * 1024L;
 

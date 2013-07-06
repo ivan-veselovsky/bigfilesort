@@ -13,14 +13,21 @@ public interface InplaceSortDataProvider {
    * @param a
    * @param b
    */
-  void exchange(long a, long b);
+  void exchange(int a, int b);
   
   /**
    * Gets the data element at the given index.
    * @param a
    * @return the element
    */
-  int get(long a);
+  int get(int a);
+  
+  /**
+   * Unconditionally puts given value at given index. 
+   * @param a
+   * @param v
+   */
+  void put(int a, int v);
   
   /**
    * Gets max index of the data provider (inclusive).
@@ -28,13 +35,15 @@ public interface InplaceSortDataProvider {
    * arg greater than this index is undefined.
    * @return max index
    */
-  long getMaxIndex();
+  int getMaxIndex();
+
+  int getMinIndex();
   
   // ----------------------------
   // Diagnostic methods:
   
-  long numberOfGets();
+  long numberOfReads();
   
-  long numberOfExchanges();
+  long numberOfWrites();
   
 }

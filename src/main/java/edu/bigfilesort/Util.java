@@ -34,4 +34,8 @@ public class Util {
         return log2minus + 1;
      }
   }
+  
+  public static boolean retTrue(long any) {
+    return true;
+  } 
 }

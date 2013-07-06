@@ -10,7 +10,7 @@ import static java.lang.System.out;
 public class TestHeapSort {
 
   //NB: not necessarily power of 2:
-  private static final int arrayLength = 1024 * 1024 * 16;
+  private static final int arrayLength = 1024 * 1024 * 16; //16;
   
   private static int[] array = new int[arrayLength];
   private static int[] array2 = new int[arrayLength];
@@ -63,7 +63,7 @@ public class TestHeapSort {
     assertArrayEquals(arr1, arr2);
 
     {
-    InplaceSortDataProvider provider = new ArrayInplaceSortDataProvider(arr1);
+    InplaceSortDataProvider provider = new ArrayInplaceSortDataProvider(arr1, -1);
     HeapSort heapSort = new HeapSort(provider);
     long t = System.currentTimeMillis();
     heapSort.sort();
@@ -71,9 +71,8 @@ public class TestHeapSort {
     UtilForTest.assertArraySorted(arr1);
     final long nLogN = arr1.length * Util.log2plus(arr1.length);
     out.println("n * log2(n) = " + nLogN);
-    out.println("Heap sort gets      = " + ((double)provider.numberOfGets()) / nLogN);
-    out.println("Heap sort exchanges = " + ((double)provider.numberOfExchanges()) / nLogN);
-    out.println("Heap sort time     = " + d + " ms");
+    assert printCounters(provider, heapSort, nLogN);
+    out.println("Heap sort time        = " + d + " ms");
     }
     
     {
@@ -83,7 +82,12 @@ public class TestHeapSort {
     UtilForTest.assertArraySorted(arr2);
     out.println("Arrays.sort() time = " + d2 + " ms");
     }
-    
-    System.gc();
+  }
+  
+  private boolean printCounters(InplaceSortDataProvider provider, HeapSort heapSort, long nLogN) {
+    out.println("Heap sort reads       = " + ((double)provider.numberOfReads()) / nLogN);
+    out.println("Heap sort writes      = " + ((double)provider.numberOfWrites()) / nLogN);
+    out.println("Heap sort Comparisons = " + ((double)heapSort.numberOfComparisons()) / nLogN);
+    return true;
   }
 }

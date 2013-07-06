@@ -1,52 +1,66 @@
 package edu.bigfilesort;
 
 import java.util.concurrent.atomic.AtomicLong;
+import static edu.bigfilesort.Util.*;
 
 public class ArrayInplaceSortDataProvider implements InplaceSortDataProvider {
 
   private final int[] array;
-  private final AtomicLong numberOfGets = new AtomicLong(0);  
-  private final AtomicLong numberOfExchanges = new AtomicLong(0);  
+  private final int indexShift;
+  private final AtomicLong numberOfReads = new AtomicLong(0);
+  private final AtomicLong numberOfWrites = new AtomicLong(0);
   
-  public ArrayInplaceSortDataProvider(int[] array0) {
+  /*
+   * All index args in this class == "virtual" indexes.
+   * Rule:
+   * "physical" index (index in the array passed in) == "virtual" index + indexShift.
+   */
+  public ArrayInplaceSortDataProvider(int[] array0, int indexShift0) {
     array = array0;
-  }
-  
-  protected int index(long interfaceIndex) {
-    int i = (int)(--interfaceIndex);
-    assert (i >=0 && i<array.length); // sanity check
-    return i;
+    indexShift = indexShift0;
   }
   
   @Override
-  public void exchange(long a, long b) {
-    int ia = index(a);
-    int ib = index(b);
+  public void exchange(int a, int b) {
+    int ia = (int)(a + indexShift);
+    int ib = (int)(b + indexShift);
     int t = array[ia];
     array[ia] = array[ib];
     array[ib] = t;
-    numberOfExchanges.incrementAndGet();
+    assert retTrue( numberOfReads.addAndGet(2) );
+    assert retTrue( numberOfWrites.addAndGet(2) );
   }
 
   @Override
-  public int get(long a) {
-    numberOfGets.incrementAndGet();
-    return array[index(a)];
+  public int get(int a) {
+    assert retTrue( numberOfReads.incrementAndGet() );
+    return array[a + indexShift];
+  }
+  
+  @Override
+  public void put(int a, int v) {
+    assert retTrue( numberOfWrites.incrementAndGet() );
+    array[a + indexShift] = v;
   }
 
   @Override
-  public long getMaxIndex() {
-    return array.length;
+  public int getMaxIndex() {
+    return (array.length - 1 - indexShift);
   }
 
   @Override
-  public long numberOfGets() {
-    return numberOfGets.get();
+  public int getMinIndex() {
+    return (-indexShift);
+  }
+  
+  @Override
+  public long numberOfReads() {
+    return numberOfReads.get();
   }
 
   @Override
-  public long numberOfExchanges() {
-    return numberOfExchanges.get();
+  public long numberOfWrites() {
+    return numberOfWrites.get();
   }
 
 }
