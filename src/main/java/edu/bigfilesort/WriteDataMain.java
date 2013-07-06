@@ -3,7 +3,6 @@ package edu.bigfilesort;
 import static java.lang.System.out;
 
 import java.io.RandomAccessFile;
-import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
@@ -16,6 +15,7 @@ public class WriteDataMain {
   enum Mode {
     asc, // ascending 
     desc, // descending
+    flat, // equal numbers
     rand; // random
   }
   
@@ -91,7 +91,7 @@ public class WriteDataMain {
         assert (len % Main.dataLength == 0);
         //out.println("Position = " + position + ", length = " + len);
         
-        final MappedByteBuffer mbb = fc.map(MapMode.READ_WRITE, position, len);
+        MappedByteBuffer mbb = fc.map(MapMode.READ_WRITE, position, len);
         mbb.order(Main.byteOrder);
         
         int data;
@@ -100,6 +100,10 @@ public class WriteDataMain {
           mbb.putInt(data);
           writtenCount += Main.dataLength;
         }
+        
+        mbb.force();
+        Util.disposeDirectByteBuffer(mbb);
+        mbb = null;
       }
       
       System.out.println("file length =   " + fileLength);
@@ -120,6 +124,7 @@ public class WriteDataMain {
     switch (mode) {
       case asc: return new AscendingDataProvider();
       case desc: return new DescendingDataProvider();
+      case flat: return new FlatDataProvider(-7);
       case rand: return new RamdomDataProvider();
       default: throw new IllegalArgumentException("Unknown mode " + mode);
     }
@@ -182,6 +187,17 @@ public class WriteDataMain {
     }
   }
 
+  static class FlatDataProvider implements DataProvider {
+    private final int data;
+    public FlatDataProvider(int x0) {
+      data = x0;
+    }
+    @Override
+    public int next() {
+      return data;
+    }
+  }
+  
   static class RamdomDataProvider implements DataProvider {
     private final Random random;
     public RamdomDataProvider() {

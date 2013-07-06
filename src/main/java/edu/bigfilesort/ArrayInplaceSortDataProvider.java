@@ -5,7 +5,7 @@ import static edu.bigfilesort.Util.*;
 
 public class ArrayInplaceSortDataProvider implements InplaceSortDataProvider {
 
-  private final int[] array;
+  private int[] array;
   private final int indexShift;
   private final AtomicLong numberOfReads = new AtomicLong(0);
   private final AtomicLong numberOfWrites = new AtomicLong(0);
@@ -20,16 +20,16 @@ public class ArrayInplaceSortDataProvider implements InplaceSortDataProvider {
     indexShift = indexShift0;
   }
   
-  @Override
-  public void exchange(int a, int b) {
-    int ia = (int)(a + indexShift);
-    int ib = (int)(b + indexShift);
-    int t = array[ia];
-    array[ia] = array[ib];
-    array[ib] = t;
-    assert retTrue( numberOfReads.addAndGet(2) );
-    assert retTrue( numberOfWrites.addAndGet(2) );
-  }
+//  @Override
+//  public void exchange(int a, int b) {
+//    int ia = (int)(a + indexShift);
+//    int ib = (int)(b + indexShift);
+//    int t = array[ia];
+//    array[ia] = array[ib];
+//    array[ib] = t;
+//    assert retTrue( numberOfReads.addAndGet(2) );
+//    assert retTrue( numberOfWrites.addAndGet(2) );
+//  }
 
   @Override
   public int get(int a) {
@@ -63,4 +63,13 @@ public class ArrayInplaceSortDataProvider implements InplaceSortDataProvider {
     return numberOfWrites.get();
   }
 
+  @Override
+  public void force() {
+  }
+  
+  @Override
+  public void dispose() {
+    // just free the array to be GC-ed:
+    array = null;
+  }
 }

@@ -146,7 +146,7 @@ public class ChoiceQuickHeapInplaceSort implements InplaceSort {
       if (run[count] == right++) { // The last run contains one element
           run[++count] = right;
       } else if (count == 1) { // The array is already sorted
-          return null;
+          return null; // *** NB
       }
 
       return Boolean.FALSE;

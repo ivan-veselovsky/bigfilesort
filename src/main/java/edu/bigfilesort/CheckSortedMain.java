@@ -3,7 +3,6 @@ package edu.bigfilesort;
 import static java.lang.System.out;
 
 import java.io.RandomAccessFile;
-import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
@@ -26,7 +25,7 @@ public class CheckSortedMain {
     }
     String fileName = args[0];
     
-    if (bufferSize % Main.dataLength != 0) {
+    if ((bufferSize % Main.dataLength) != 0L) {
       throw new IllegalStateException("Buffer size must be multiple of "+Main.dataLength+".");
     }
     
@@ -81,8 +80,9 @@ public class CheckSortedMain {
         mbb = fc.map(MapMode.READ_ONLY, position, len);
         mbb.order(Main.byteOrder);
         
+        int d;
         for (long offset = 0; offset < (len / Main.dataLength); offset++) {
-          int d = mbb.getInt();
+          d = mbb.getInt();
           if (d < leader) {
             assert readOkayByteCount % Main.dataLength == 0;
         	  throw new IllegalStateException("Sorting violation at *number* position ["
@@ -92,6 +92,9 @@ public class CheckSortedMain {
           leader = d;
           readOkayByteCount += Main.dataLength;
         }
+        
+        Util.disposeDirectByteBuffer(mbb);
+        mbb = null;
       }
       
       assert (readOkayByteCount == fileLength);

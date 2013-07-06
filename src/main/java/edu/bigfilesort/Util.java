@@ -2,6 +2,11 @@ package edu.bigfilesort;
 
 import static java.lang.System.out;
 
+import java.nio.ByteBuffer;
+
+import sun.misc.Cleaner;
+import sun.nio.ch.DirectBuffer;
+
 public class Util {
   
   public static boolean isPowerOf2(long x) {
@@ -44,5 +49,19 @@ public class Util {
   public static boolean printTrue(String any) {
     out.println(any);
     return true;
-  } 
+  }
+  
+  public static void disposeDirectByteBuffer(ByteBuffer buf) {
+    if (buf.isDirect() && buf instanceof DirectBuffer) {
+      /*
+       * NB: DirectBuffer and Cleaner are not parts of the
+       * official nio API. So, these classes may be changed in further
+       * JDK releases. However, they seem to be present in both JDK6 and 7. 
+       */
+      Cleaner cleaner = ((DirectBuffer)buf).cleaner();
+      if (cleaner != null) {
+        cleaner.clean();
+      }
+    }
+  }
 }

@@ -8,12 +8,12 @@ package edu.bigfilesort;
  */
 public interface InplaceSortDataProvider {
 
-  /**
-   * Unconditionally exchanges 2 elements at the given indexes.
-   * @param a
-   * @param b
-   */
-  void exchange(int a, int b);
+//  /**
+//   * Unconditionally exchanges 2 elements at the given indexes.
+//   * @param a
+//   * @param b
+//   */
+//  void exchange(int a, int b);
   
   /**
    * Gets the data element at the given index.
@@ -28,6 +28,20 @@ public interface InplaceSortDataProvider {
    * @param v
    */
   void put(int a, int v);
+
+  /**
+   * Optional operation for File-based providers.
+   * Flushes the data to the underlying storage layer.
+   * See e.g. {@link java.nio.MappedByteBuffer#force()}. 
+   */
+  void force();
+
+  /**
+   * Disposes temporary buffer, if any (optional operation).
+   * Typical implementation would be to provide necessary native mapped memory cleanup 
+   * (if any is necessary) and lose the reference to ByteBuffer (if any).   
+   */
+  void dispose();
   
   /**
    * Gets max index of the data provider (inclusive).

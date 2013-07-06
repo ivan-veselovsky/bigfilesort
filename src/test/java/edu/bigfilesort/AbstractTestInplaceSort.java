@@ -73,7 +73,7 @@ public abstract class AbstractTestInplaceSort {
     UtilForTest.assertArraySorted(arr1);
     final long nLogN = arr1.length * Util.log2plus(arr1.length);
     out.println("n * log2(n) = " + nLogN);
-    assert printCounters(provider, heapSort, nLogN);
+    printCounters(provider, heapSort, nLogN);
     out.println(" Sort time        = " + d + " ms");
     }
     
