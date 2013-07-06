@@ -69,9 +69,10 @@ public class ByteBufferInplaceSortDataProvider implements InplaceSortDataProvide
 
   @Override
   public void force() {
-    if (buf instanceof MappedByteBuffer) {
-      ((MappedByteBuffer)buf).force();
-    }
+    // XXX: experimental:
+//    if (buf instanceof MappedByteBuffer) {
+//      ((MappedByteBuffer)buf).force();
+//    }
   }
 
   @Override

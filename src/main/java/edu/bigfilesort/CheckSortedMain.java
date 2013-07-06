@@ -93,6 +93,7 @@ public class CheckSortedMain {
           readOkayByteCount += Main.dataLength;
         }
         
+        // XXX
         Util.disposeDirectByteBuffer(mbb);
         mbb = null;
       }

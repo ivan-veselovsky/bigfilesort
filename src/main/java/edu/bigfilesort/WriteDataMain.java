@@ -101,7 +101,8 @@ public class WriteDataMain {
           writtenCount += Main.dataLength;
         }
         
-        mbb.force();
+        // NB: force seems to slow down the writing drastically (~5 times): 
+        //mbb.force();
         Util.disposeDirectByteBuffer(mbb);
         mbb = null;
       }
