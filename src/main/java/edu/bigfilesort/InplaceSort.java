@@ -5,4 +5,6 @@ public interface InplaceSort {
   void sort();
   
   long numberOfComparisons();
+  
+  String getName();
 }

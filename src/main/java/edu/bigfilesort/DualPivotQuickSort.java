@@ -29,6 +29,11 @@ public class DualPivotQuickSort implements InplaceSort {
   }
   
   @Override
+  public String getName() {
+    return "Dual-Pivot Quicksort";
+  }
+  
+  @Override
   public long numberOfComparisons() {
     return comparisonCount.get();
   }
@@ -70,7 +75,7 @@ public class DualPivotQuickSort implements InplaceSort {
               for (int i = left, j = i; i < right; j = ++i) {
                   int ai = /*a[i + 1]*/provider.get(i + 1);
                   while (ai < /*a[j]*/provider.get(j)) {
-                      a[j + 1] = a[j];
+                      provider.put(j + 1, provider.get(j));
                       if (j-- == left) {
                           break;
                       }
@@ -85,7 +90,7 @@ public class DualPivotQuickSort implements InplaceSort {
                   if (left >= right) {
                       return;
                   }
-              } while (a[++left] >= a[left - 1]);
+              } while (provider.get(++left) >= provider.get(left - 1));
 
               /*
                * Every element from adjoining part plays the role
@@ -96,27 +101,27 @@ public class DualPivotQuickSort implements InplaceSort {
                * than traditional implementation of insertion sort.
                */
               for (int k = left; ++left <= right; k = ++left) {
-                  int a1 = a[k], a2 = a[left];
+                  int a1 = provider.get(k), a2 = provider.get(left);
 
                   if (a1 < a2) {
-                      a2 = a1; a1 = a[left];
+                      a2 = a1; a1 = provider.get(left);
                   }
-                  while (a1 < a[--k]) {
-                      a[k + 2] = a[k];
+                  while (a1 < provider.get(--k)) {
+                      provider.put(k + 2, provider.get(k));
                   }
-                  a[++k + 1] = a1;
+                  provider.put(++k + 1, a1);
 
-                  while (a2 < a[--k]) {
-                      a[k + 1] = a[k];
+                  while (a2 < provider.get(--k)) {
+                      provider.put(k + 1, provider.get(k));
                   }
-                  a[k + 1] = a2;
+                  provider.put(k + 1, a2);
               }
-              int last = a[right];
+              int last = provider.get(right);
 
-              while (last < a[--right]) {
-                  a[right + 1] = a[right];
+              while (last < provider.get(--right)) {
+                  provider.put(right + 1, provider.get(right));
               }
-              a[right + 1] = last;
+              provider.put(right + 1, last);
           }
           return;
       }
@@ -138,20 +143,20 @@ public class DualPivotQuickSort implements InplaceSort {
       int e5 = e4 + seventh;
 
       // Sort these elements using insertion sort
-      if (a[e2] < a[e1]) { int t = a[e2]; a[e2] = a[e1]; a[e1] = t; }
+      if (provider.get(e2) < provider.get(e1)) { int t = provider.get(e2); provider.put(e2, provider.get(e1)); provider.put(e1, t); }
 
-      if (a[e3] < a[e2]) { int t = a[e3]; a[e3] = a[e2]; a[e2] = t;
-          if (t < a[e1]) { a[e2] = a[e1]; a[e1] = t; }
+      if (provider.get(e3) < provider.get(e2)) { int t = provider.get(e3); provider.put(e3, provider.get(e2)); provider.put(e2, t);
+          if (t < provider.get(e1)) { provider.put(e2, provider.get(e1)); provider.put(e1, t); }
       }
-      if (a[e4] < a[e3]) { int t = a[e4]; a[e4] = a[e3]; a[e3] = t;
-          if (t < a[e2]) { a[e3] = a[e2]; a[e2] = t;
-              if (t < a[e1]) { a[e2] = a[e1]; a[e1] = t; }
+      if (provider.get(e4) < provider.get(e3)) { int t = provider.get(e4); provider.put(e4, provider.get(e3)); provider.put(e3, t);
+          if (t < provider.get(e2)) { provider.put(e3, provider.get(e2)); provider.put(e2, t);
+              if (t < provider.get(e1)) { provider.put(e2, provider.get(e1)); provider.put(e1, t); }
           }
       }
-      if (a[e5] < a[e4]) { int t = a[e5]; a[e5] = a[e4]; a[e4] = t;
-          if (t < a[e3]) { a[e4] = a[e3]; a[e3] = t;
-              if (t < a[e2]) { a[e3] = a[e2]; a[e2] = t;
-                  if (t < a[e1]) { a[e2] = a[e1]; a[e1] = t; }
+      if (provider.get(e5) < provider.get(e4)) { int t = provider.get(e5); provider.put(e5, provider.get(e4)); provider.put(e4, t);
+          if (t < provider.get(e3)) { provider.put(e4, provider.get(e3)); provider.put(e3, t);
+              if (t < provider.get(e2)) { provider.put(e3, provider.get(e2)); provider.put(e2, t);
+                  if (t < provider.get(e1)) { provider.put(e2, provider.get(e1)); provider.put(e1, t); }
               }
           }
       }
@@ -160,14 +165,14 @@ public class DualPivotQuickSort implements InplaceSort {
       int less  = left;  // The index of the first element of center part
       int great = right; // The index before the first element of right part
 
-      if (a[e1] != a[e2] && a[e2] != a[e3] && a[e3] != a[e4] && a[e4] != a[e5]) {
+      if (provider.get(e1) != provider.get(e2) && provider.get(e2) != provider.get(e3) && provider.get(e3) != provider.get(e4) && provider.get(e4) != provider.get(e5)) {
           /*
            * Use the second and fourth of the five sorted elements as pivots.
            * These values are inexpensive approximations of the first and
            * second terciles of the array. Note that pivot1 <= pivot2.
            */
-          int pivot1 = a[e2];
-          int pivot2 = a[e4];
+          int pivot1 = provider.get(e2);
+          int pivot2 = provider.get(e4);
 
           /*
            * The first and the last elements to be sorted are moved to the
@@ -175,14 +180,14 @@ public class DualPivotQuickSort implements InplaceSort {
            * is complete, the pivots are swapped back into their final
            * positions, and excluded from subsequent sorting.
            */
-          a[e2] = a[left];
-          a[e4] = a[right];
+          provider.put(e2, provider.get(left));
+          provider.put(e4, provider.get(right));
 
           /*
            * Skip elements, which are less or greater than pivot values.
            */
-          while (a[++less] < pivot1);
-          while (a[--great] > pivot2);
+          while (provider.get(++less) < pivot1);
+          while (provider.get(--great) > pivot2);
 
           /*
            * Partitioning:
@@ -205,40 +210,40 @@ public class DualPivotQuickSort implements InplaceSort {
            */
           outer:
           for (int k = less - 1; ++k <= great; ) {
-              int ak = a[k];
+              int ak = provider.get(k);
               if (ak < pivot1) { // Move a[k] to left part
-                  a[k] = a[less];
+                  provider.put(k, provider.get(less));
                   /*
                    * Here and below we use "a[i] = b; i++;" instead
                    * of "a[i++] = b;" due to performance issue.
                    */
-                  a[less] = ak;
+                  provider.put(less, ak);
                   ++less;
               } else if (ak > pivot2) { // Move a[k] to right part
-                  while (a[great] > pivot2) {
+                  while (provider.get(great) > pivot2) {
                       if (great-- == k) {
                           break outer;
                       }
                   }
-                  if (a[great] < pivot1) { // a[great] <= pivot2
-                      a[k] = a[less];
-                      a[less] = a[great];
+                  if (provider.get(great) < pivot1) { // a[great] <= pivot2
+                      provider.put(k, provider.get(less));
+                      provider.put(less, provider.get(great));
                       ++less;
                   } else { // pivot1 <= a[great] <= pivot2
-                      a[k] = a[great];
+                      provider.put(k, provider.get(great));
                   }
                   /*
                    * Here and below we use "a[i] = b; i--;" instead
                    * of "a[i--] = b;" due to performance issue.
                    */
-                  a[great] = ak;
+                  provider.put(great, ak);
                   --great;
               }
           }
 
           // Swap pivots into their final positions
-          a[left]  = a[less  - 1]; a[less  - 1] = pivot1;
-          a[right] = a[great + 1]; a[great + 1] = pivot2;
+          provider.put(left, provider.get(less  - 1)); provider.put(less  - 1, pivot1);
+          provider.put(right, provider.get(great + 1)); provider.put(great + 1, pivot2);
 
           // Sort left and right parts recursively, excluding known pivots
           sort(/*a,*/ left, less - 2, leftmost);
@@ -252,11 +257,11 @@ public class DualPivotQuickSort implements InplaceSort {
               /*
                * Skip elements, which are equal to pivot values.
                */
-              while (a[less] == pivot1) {
+              while (provider.get(less) == pivot1) {
                   ++less;
               }
 
-              while (a[great] == pivot2) {
+              while (provider.get(great) == pivot2) {
                   --great;
               }
 
@@ -281,19 +286,19 @@ public class DualPivotQuickSort implements InplaceSort {
                */
               outer:
               for (int k = less - 1; ++k <= great; ) {
-                  int ak = a[k];
+                  int ak = provider.get(k);
                   if (ak == pivot1) { // Move a[k] to left part
-                      a[k] = a[less];
-                      a[less] = ak;
+                      provider.put(k, provider.get(less));
+                      provider.put(less, ak);
                       ++less;
                   } else if (ak == pivot2) { // Move a[k] to right part
-                      while (a[great] == pivot2) {
+                      while (provider.get(great) == pivot2) {
                           if (great-- == k) {
                               break outer;
                           }
                       }
-                      if (a[great] == pivot1) { // a[great] < pivot2
-                          a[k] = a[less];
+                      if (provider.get(great) == pivot1) { // a[great] < pivot2
+                          provider.put(k, provider.get(less));
                           /*
                            * Even though a[great] equals to pivot1, the
                            * assignment a[less] = pivot1 may be incorrect,
@@ -302,12 +307,12 @@ public class DualPivotQuickSort implements InplaceSort {
                            * double sorting methods we have to use more
                            * accurate assignment a[less] = a[great].
                            */
-                          a[less] = pivot1;
+                          provider.put(less, pivot1);
                           ++less;
                       } else { // pivot1 < a[great] < pivot2
-                          a[k] = a[great];
+                          provider.put(k, provider.get(great));
                       }
-                      a[great] = ak;
+                      provider.put(great, ak);
                       --great;
                   }
               }
@@ -321,7 +326,7 @@ public class DualPivotQuickSort implements InplaceSort {
            * Use the third of the five sorted elements as pivot.
            * This value is inexpensive approximation of the median.
            */
-          int pivot = a[e3];
+          int pivot = provider.get(e3);
 
           /*
            * Partitioning degenerates to the traditional 3-way
@@ -344,21 +349,21 @@ public class DualPivotQuickSort implements InplaceSort {
            * Pointer k is the first index of ?-part.
            */
           for (int k = less; k <= great; ++k) {
-              if (a[k] == pivot) {
+              if (provider.get(k) == pivot) {
                   continue;
               }
-              int ak = a[k];
+              int ak = provider.get(k);
               if (ak < pivot) { // Move a[k] to left part
-                  a[k] = a[less];
-                  a[less] = ak;
+                  provider.put(k, provider.get(less));
+                  provider.put(less, ak);
                   ++less;
               } else { // a[k] > pivot - Move a[k] to right part
-                  while (a[great] > pivot) {
+                  while (provider.get(great) > pivot) {
                       --great;
                   }
-                  if (a[great] < pivot) { // a[great] <= pivot
-                      a[k] = a[less];
-                      a[less] = a[great];
+                  if (provider.get(great) < pivot) { // a[great] <= pivot
+                      provider.put(k, provider.get(less));
+                      provider.put(less, provider.get(great));
                       ++less;
                   } else { // a[great] == pivot
                       /*
@@ -369,9 +374,9 @@ public class DualPivotQuickSort implements InplaceSort {
                        * and double sorting methods we have to use
                        * more accurate assignment a[k] = a[great].
                        */
-                      a[k] = pivot;
+                      provider.put(k, pivot);
                   }
-                  a[great] = ak;
+                  provider.put(great, ak);
                   --great;
               }
           }

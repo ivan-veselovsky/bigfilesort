@@ -1,5 +1,7 @@
 package edu.bigfilesort;
 
+import static java.lang.System.out;
+
 public class Util {
   
   public static boolean isPowerOf2(long x) {
@@ -36,6 +38,11 @@ public class Util {
   }
   
   public static boolean retTrue(long any) {
+    return true;
+  }
+  
+  public static boolean printTrue(String any) {
+    out.println(any);
     return true;
   } 
 }

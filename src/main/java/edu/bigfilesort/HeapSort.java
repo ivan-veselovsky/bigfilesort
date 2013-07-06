@@ -28,6 +28,11 @@ public class HeapSort implements InplaceSort {
      heapSize = length;
    }
    
+   @Override
+  public String getName() {
+    return "HEAP";
+  }
+   
    /*
     * NB: heapSize field must be set correctly prio to this call.
     */

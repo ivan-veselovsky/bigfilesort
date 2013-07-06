@@ -1,11 +1,10 @@
 package edu.bigfilesort;
 
-
-public class TestHeapSort extends AbstractTestInplaceSort {
+public class TestDualPivotQuickSort extends AbstractTestInplaceSort {
 
   @Override
   protected InplaceSort createInplaceSort(InplaceSortDataProvider provider) {
-    return new HeapSort(provider);
+    return new DualPivotQuickSort(provider);
   }
   
 }
