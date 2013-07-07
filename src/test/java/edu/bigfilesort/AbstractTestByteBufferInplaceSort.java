@@ -21,21 +21,28 @@ public abstract class AbstractTestByteBufferInplaceSort {
    * In CentOS-64 1024 * 1024 * 512 - 1 (== ~2G == max possible for one ByteBuffer) was allocated
    * without any problems.
    * 
-   * Single-thread sorting results on Windows: 
+   * Single-thread sorting results on Windows-32 (DP-Quick Sort): 
    * 128 ints -- 137 sec
    * 192 ints -- 215,258 sec
    * 256 ints -- OOME 
    * 
-   * Single-thread sorting results on CentOS:
-   * 256 ints -- 160 sec
-   * 512 ints -- 822 sec (? need to re-check) 
+   * Single-thread sorting results on CentOS (DP-Quick Sort):
+   * 128 ints -- 193 sec
+   * 256 ints -- 160(???) 406,397 sec
+   * 512 ints -- 822,832 sec (? need to re-check)
+   * 
+   * ------------------------------------------------------
+   * Heap Sort, CentOS:
+   * 128 ints -- 146 sec
+   * 256 ints -- 350 sec
+   * 512 ints --  
    */
   
   // Number of data values (integers)
   // NB: not necessarily power of 2.
   // 1G file <-> 1024 * 1024 * 256
   // Max possible buffer (~2G): 1024 * 1024 * 512 - 1
-  private static final int arrayLength = 1024 * 1024 * 256; //512 - 1; 
+  private static final int arrayLength = 1024 * 1024 * 512 - 1; 
   
   protected long bytePos = 0;
   protected long byteLength = ((long)arrayLength) * Main.dataLength;

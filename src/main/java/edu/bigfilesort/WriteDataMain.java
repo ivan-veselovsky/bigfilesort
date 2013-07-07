@@ -44,8 +44,11 @@ public class WriteDataMain {
     }
     String fileName = args[0];
     long length = Long.parseLong(args[1]);
+    if (length < 0) {
+      throw new IllegalArgumentException("Length must be positive. ("+length+").");
+    }
     if (length % Main.dataLength != 0) {
-      throw new IllegalArgumentException("Length must be multiple of "+Main.dataLength+".");
+      throw new IllegalArgumentException("Length must be multiple of "+Main.dataLength+". (" +length+")");
     }
     String modeStr = args[2];
     

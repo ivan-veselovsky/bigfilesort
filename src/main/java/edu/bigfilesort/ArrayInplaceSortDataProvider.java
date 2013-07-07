@@ -33,13 +33,13 @@ public class ArrayInplaceSortDataProvider implements InplaceSortDataProvider {
 
   @Override
   public int get(int a) {
-    assert retTrue( numberOfReads.incrementAndGet() );
+    if (Main.countersEnabled) { numberOfReads.incrementAndGet(); }
     return array[a + indexShift];
   }
   
   @Override
   public void put(int a, int v) {
-    assert retTrue( numberOfWrites.incrementAndGet() );
+    if (Main.countersEnabled) { numberOfWrites.incrementAndGet(); }
     array[a + indexShift] = v;
   }
 

@@ -2,8 +2,6 @@ package edu.bigfilesort;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import static edu.bigfilesort.Util.*;
-
 /*
  * We had to create own implementation because of 2 reasons:
  * 1) Arrays.sort() uses fallback to merge sort which requires additional arrays;
@@ -76,14 +74,14 @@ public class ChoiceQuickHeapInplaceSort implements InplaceSort {
     int max= provider.getMaxIndex();
     Boolean q = useQuick(min, max);
     if (q == null) {
-      assert printTrue("choice: already sorted.");
+      if (Main.debug) { System.out.println("choice: already sorted."); }
       return; // the array is already sorted, nothing to do.
     }
     if (q.booleanValue()) {
-      assert printTrue("choice: use quick.");
+      if (Main.debug) { System.out.println("choice: use quick."); }
       inplaceSortImpl = new DualPivotQuickSort(provider);
     } else {
-      assert printTrue("choice: use heap.");
+      if (Main.debug) { System.out.println("choice: use heap."); }
       inplaceSortImpl = new HeapSort(provider);
     }
     inplaceSortImpl.sort();

@@ -23,8 +23,16 @@ public class Main {
    
    public static final ByteOrder byteOrder = ByteOrder.BIG_ENDIAN;
    
+   // ----------------------------------------------------------------
+   
    private static final long megaByte = 1024L * 1024L;
+   
+   public static boolean debug = true;
 
+   public static boolean countersEnabled = false;
+   
+   // ----------------------------------------------------------------
+   
    private String fileName;
    private RandomAccessFile raf, rafZ;
    private long fileLength;

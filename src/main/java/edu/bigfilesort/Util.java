@@ -42,17 +42,9 @@ public class Util {
      }
   }
   
-  public static boolean retTrue(long any) {
-    return true;
-  }
-  
-  public static boolean printTrue(String any) {
-    out.println(any);
-    return true;
-  }
-  
   public static void disposeDirectByteBuffer(ByteBuffer buf) {
     if (buf.isDirect() && buf instanceof DirectBuffer) {
+      int cap = buf.capacity();
       /*
        * NB: DirectBuffer and Cleaner are not parts of the
        * official nio API. So, these classes may be changed in further
@@ -61,6 +53,9 @@ public class Util {
       Cleaner cleaner = ((DirectBuffer)buf).cleaner();
       if (cleaner != null) {
         cleaner.clean();
+//        if (Main.debug) {
+//          System.out.println("     direct buffer of cap = " +cap+ " freed.");
+//        }
       }
     }
   }

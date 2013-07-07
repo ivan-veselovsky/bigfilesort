@@ -30,7 +30,7 @@ public class ByteBufferInplaceSortDataProvider implements InplaceSortDataProvide
   
   @Override
   public int get(int a) {
-    assert retTrue( numberOfReads.incrementAndGet() );
+    if (Main.countersEnabled) { numberOfReads.incrementAndGet(); }
     assert ((a + indexShift) << Main.log2DataLength) < buf.capacity();
     assert ((a + indexShift) << Main.log2DataLength) >= 0;
     return buf.getInt((a + indexShift) << Main.log2DataLength);
@@ -38,7 +38,7 @@ public class ByteBufferInplaceSortDataProvider implements InplaceSortDataProvide
   
   @Override
   public void put(int a, int v) {
-    assert retTrue( numberOfWrites.incrementAndGet() );
+    if (Main.countersEnabled) { numberOfWrites.incrementAndGet(); }
     assert ((a + indexShift) << Main.log2DataLength) < buf.capacity();
     assert ((a + indexShift) << Main.log2DataLength) >= 0;
     buf.putInt((a + indexShift) << Main.log2DataLength, v);

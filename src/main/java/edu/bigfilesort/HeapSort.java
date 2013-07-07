@@ -1,7 +1,5 @@
 package edu.bigfilesort;
 
-import static edu.bigfilesort.Util.*;
-
 import java.util.concurrent.atomic.AtomicLong;
 
 /*
@@ -45,7 +43,7 @@ public class HeapSort implements InplaceSort {
         int maxIndex = leftIndex;
         if (rightIndex <= heapSize) {
           int rightValue  = dataProvider.get(rightIndex); // read #2
-          assert retTrue( cmpCount.incrementAndGet() );
+          if (Main.countersEnabled) { cmpCount.incrementAndGet(); }
           // NB: in case of value equality prefer right choice:
           if (rightValue >= maxValue) { // cmp #1
             maxIndex = rightIndex;
@@ -54,7 +52,7 @@ public class HeapSort implements InplaceSort {
         }
         // now maxValue is the max of the 2 kids.
         int parentValue;
-        assert retTrue( cmpCount.incrementAndGet() );  
+        if (Main.countersEnabled) {  cmpCount.incrementAndGet(); }  
         if (maxValue > (parentValue = dataProvider.get(parentIndex))) { // read #3, cmp #2
           // exchange: parentIndex <-> maxIndex 
           dataProvider.put(parentIndex, maxValue); // write #1
