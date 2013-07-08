@@ -76,8 +76,8 @@ public class Main {
          out.println("Parameters: <file name> <thread count> [max allowed native memory in mega bytes]");
          out.println("(Default for the last parameter is " + intsToMegabytes(maxAllocNumbers) + " Mb.)");
          out.println("Example:");
-         out.println(" ./bigfilesort.sh test-putina-naxuy.data 7 ");
-         out.println("sorts file 'test-sort-1027x4m.data' using 7 threads with 1024 megabytes of allowed native memory.");
+         out.println(" ./bigfilesort.sh test-putina-naxuy.data 7 1024");
+         out.println("sorts the file using 7 threads with 1024 megabytes of total allowed native memory (both direct + mapped).");
          out.println("(Note that JVM parameter -XX:MaxDirectMemorySize=... may need to be adjusted accordingly.)");
          return 3;
       }
