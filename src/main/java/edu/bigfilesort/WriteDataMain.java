@@ -41,7 +41,7 @@ public class WriteDataMain {
   
   int mainImpl(String... args) throws Exception {
     if (args.length < 3) {
-      out.println("Paramaters: <file name> <length> <asc|desc|rand>");
+      out.println("Paramaters: <file name> <length> <asc|desc|rand|flat>");
       return 3;
     }
     String fileName = args[0];

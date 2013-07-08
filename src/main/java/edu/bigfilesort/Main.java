@@ -11,10 +11,12 @@ import edu.bigfilesort.parallel.TaskPlanner;
 import edu.bigfilesort.parallel.TaskPlannerImpl;
 
 public class Main {
-  
+
+  /** 
+   * Length of single data segment, in bytes.
+   */
    public static final int dataLength = 4; // bytes
-   
-   /*
+   /**
     * Used to simplify multiplication of the byte-based indexes: 
     */
    public static final int log2DataLength = 2; // Util.log2(dataLength); let it be compile-time const
@@ -23,13 +25,13 @@ public class Main {
    
    // how many ints may be allocated in native buffers (no matter mapped or direct)
    // note that -XX:MaxDirectMemorySize=... might be needed to use direct buffers in desired extent.  
-   private long maxAllocNumbers = 1024L * 1024 * 32; // 128 
+   private long maxAllocNumbers = 1024L * 1024 * 128; // 128 may be okay by default (512m). 32 also tested.  
    
    // ----------------------------------------------------------------
    
-   private static final long megaByte = 1024L * 1024L; // auxiliary
+   public static final long megaByte = 1024L * 1024L; // auxiliary
    
-   public static boolean debug = true;
+   public static boolean debug = false;
 
    public static boolean countersEnabled = false; // counters in sort algorythms
    
@@ -61,13 +63,22 @@ public class Main {
       final long t = System.currentTimeMillis();
       int result = runImpl();
       long delta = System.currentTimeMillis() - t;
-      out.println("Time elapsed:  " + delta + " ms");
+      if (debug) { out.println("Time elapsed:  " + delta + " ms"); }
       return result;
    }
 
+   private long intsToMegabytes(long ints/*4-byte numbers*/) {
+     return (ints * 4) / megaByte;
+   }
+   
    private int setParameters(String[] args) throws Exception {
       if (args.length < 2) {
-         out.println("At least 2 paramaters expected: <file name> <thread count>");
+         out.println("Parameters: <file name> <thread count> [max allowed native memory in mega bytes]");
+         out.println("(Default for the last parameter is " + intsToMegabytes(maxAllocNumbers) + " Mb.)");
+         out.println("Example:");
+         out.println(" ./bigfilesort.sh test-putina-naxuy.data 7 ");
+         out.println("sorts file 'test-sort-1027x4m.data' using 7 threads with 1024 megabytes of allowed native memory.");
+         out.println("(Note that JVM parameter -XX:MaxDirectMemorySize=... may need to be adjusted accordingly.)");
          return 3;
       }
 
@@ -91,7 +102,7 @@ public class Main {
 
       // thread count:
       threadCount = Integer.parseInt(args[1]);
-      out.println("Thread count: " + threadCount);
+      out.println("Threads: " + threadCount);
       if (threadCount < 1) {
          out.println("Thread count [" + threadCount + "] is less than 1.");
          return 3;
@@ -99,19 +110,19 @@ public class Main {
 
       // max alloc native
       if (args.length > 2) {
-        maxAllocNumbers = Long.parseLong(args[2]);
-        out.println("Max alloc native (ints): " + maxAllocNumbers);
+        maxAllocNumbers = (megaByte * Long.parseLong(args[2]))/4;
+        out.println("Max alloc native (Mb): " + intsToMegabytes(maxAllocNumbers) );
       } else {
-        out.println("Max alloc native (ints): " + maxAllocNumbers + " (default).");
+        out.println("Max alloc native (Mb): " + intsToMegabytes(maxAllocNumbers) + " (default).");
       }
       
       // check memory.
       // check up if the xmx corresponds to the thread count conditions:
       long actualXmxBytes = Runtime.getRuntime().maxMemory();
-      out.println("max memory found to be " + actualXmxBytes + " bytes.");
+      if (debug) { out.println("max memory found to be " + actualXmxBytes + " bytes."); }
       long expectedXmxBytes = (8 + (threadCount - 1)) * megaByte;
       long delta = expectedXmxBytes - actualXmxBytes;
-      if (delta > 500 * 1024L/* 500k */) {
+      if (delta > 1024L * 1024L/* 1m */) {
          out.println("Expected (8 + 1(threadCount - 1))) megabytes = "
                + expectedXmxBytes + ", however, only " + actualXmxBytes
                + " bytes found to be available.");

@@ -88,7 +88,7 @@ public class TestBufferedMerger {
     assertEquals(0, CheckSortedMain.mainImpl(dstFile));
   }
   
-  @Test
+  //@Test disables since it is huge
   public void testMerge1G() throws Exception {
     final long numLength = 1024L * 1024 * 2048;
     final long sumBuffersSize = 1024L * 1024 * 50;

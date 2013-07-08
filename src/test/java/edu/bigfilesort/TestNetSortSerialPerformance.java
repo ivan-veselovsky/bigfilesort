@@ -13,9 +13,9 @@ public class TestNetSortSerialPerformance {
    * Check aggregSort() with non-zero starting offset.
    */
   @Test
-  public void testSorting8M() throws Exception {
-    final long numLength = 8 * 1024 * 1024 / Main.dataLength;
-    final String file = "test-sort-8m.data";
+  public void testSorting1M() throws Exception {
+    final long numLength = 1 * 1024 * 1024 / Main.dataLength;
+    final String file = "test-sort-1m.data";
     
     WriteDataMain writeDataMain = new WriteDataMain();
     assertEquals(0, writeDataMain.mainImpl(file, "" + (Main.dataLength * numLength), 

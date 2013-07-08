@@ -393,12 +393,14 @@ public class TaskPlannerImpl implements TaskPlanner {
     assert (leftNumLen > 0);
     assert (rightNumLen >= 0); /// right length may be null. In such case this is copying. 
     final Resource r = new Resource(allowedSummaryNumBuffersLength);
-    out.println("========================== Planned Merging task: ");
-    out.println("id         = " + taskId);
-    out.println("start pos  = " + startNumPos);
-    out.println("left  len  = " + leftNumLen);
-    out.println("right len  = " + rightNumLen);
-    out.println("==========================");
+    if (Main.debug) { 
+      out.println("========================== Planned Merging task: ");
+      out.println("id         = " + taskId);
+      out.println("start pos  = " + startNumPos);
+      out.println("left  len  = " + leftNumLen);
+      out.println("right len  = " + rightNumLen);
+      out.println("==========================");
+    }
     return new ResourceTask(taskId, r, false) {
       @Override
       public Void call() throws Exception {
@@ -433,7 +435,7 @@ public class TaskPlannerImpl implements TaskPlanner {
       if (!original.exists()) {
         throw new IOException("Failed to move the data file ["+z.getAbsolutePath()+"] to ["+original.getAbsolutePath()+"].");
       } else {
-        out.println("Successfully moved z-file to original name.");
+        if (Main.debug) { out.println("Successfully moved z-file to original name."); }
       }
     } else {
       if (z.exists()) {
@@ -442,7 +444,7 @@ public class TaskPlannerImpl implements TaskPlanner {
       if (z.exists()) {
         throw new IOException("Failed to remove temporary file ["+z.getAbsolutePath()+"].");
       } else {
-        out.println("Successfully removed tmp file " + z.getAbsolutePath());
+        if (Main.debug) { out.println("Successfully removed tmp file " + z.getAbsolutePath()); }
       }
     }
   }

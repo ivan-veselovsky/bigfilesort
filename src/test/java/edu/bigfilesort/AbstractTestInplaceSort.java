@@ -6,7 +6,6 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import static java.lang.System.out;
 
-// -Xms131m -Xmx131m -XX:NewRatio=81 -XX:MaxPermSize=1m
 public abstract class AbstractTestInplaceSort {
 
   //NB: not necessarily power of 2:

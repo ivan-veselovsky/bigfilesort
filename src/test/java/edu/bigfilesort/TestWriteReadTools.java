@@ -8,21 +8,20 @@ import static java.lang.System.out;
 
 public class TestWriteReadTools {
 
-  private static final int arrayLength = 1024 * 1024 * 512 - 1; 
+  private static final int arrayLength = 1024 * 1024 * 257; 
   
-  //protected long bytePos = 0;
   protected long byteLength = ((long)arrayLength) * Main.dataLength;
   
   @Test
   public void testWriteRead() throws Exception {
-    String file = "test.data";
+    String file = "near1g.data";
 
     {
     out.println("===== writing...");
     long t = System.currentTimeMillis();
     WriteDataMain writeDataMain = new WriteDataMain();
     assertEquals(0, writeDataMain.mainImpl(file, "" + byteLength, 
-        WriteDataMain.Mode.asc.toString()));
+        WriteDataMain.Mode.rand.toString()));
     long delta = System.currentTimeMillis() - t;
     out.println("===== writing took " + delta + " ms");
     }

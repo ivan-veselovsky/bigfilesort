@@ -42,7 +42,7 @@ public abstract class AbstractTestByteBufferInplaceSort {
   // NB: not necessarily power of 2.
   // 1G file <-> 1024 * 1024 * 256
   // Max possible buffer (~2G): 1024 * 1024 * 512 - 1
-  private static final int arrayLength = 1024 * 1024 * 512 - 1; 
+  private static final int arrayLength = 1024 * 1024 * 16; //512 - 1; 
   
   protected long bytePos = 0;
   protected long byteLength = ((long)arrayLength) * Main.dataLength;
