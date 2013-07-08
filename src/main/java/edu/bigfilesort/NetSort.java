@@ -1,25 +1,14 @@
 package edu.bigfilesort;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-
-import static java.lang.System.out;
 
 public class NetSort {
 
   final Comparator cmp;
-  
-  private final ExecutorService executorService;
 
   public NetSort(Comparator cmp0, ExecutorService es) {
     cmp = cmp0;
-    executorService = es;
   }
   
   
@@ -50,8 +39,6 @@ public class NetSort {
 //      });
     }
     
-    waitForSubmitted(); // wait for cascade 1 completion
-    
     //out.println("------------- Cascade 2:");
     // Cascade 2: descending half-cleaners:
     // ex: len = 16: k = 4, 2, 1
@@ -71,20 +58,12 @@ public class NetSort {
     }
   }
   
-  void waitForSubmitted() {
-    // TODO
-  }
-  
   /*
    * 
    */
   void submitParallel(Callable<Void> callable) throws Exception {
     callable.call();
   }
-  
-//  void comparator(long numPosA, long numPosB) throws Exception {
-//    cmpCount++;
-//  }
 
   public void aggregatedMerge(final long startNumPos, final long numPieces, final long pieceNumLength) throws Exception {
     assert Util.isPowerOf2(numPieces); // now only power of 2

@@ -82,7 +82,6 @@ public class TestBufferedMerger {
         WriteDataMain.Mode.desc.toString()
         ));
 
-    // XXX: does not work when numLength % sumBufSize != 0
    mergeImpl(17, srcFile, dstFile, 0, numLength/2, numLength/2);
     
     // check sorting:
@@ -120,7 +119,10 @@ public class TestBufferedMerger {
   }
   
   
-  private void mergeImpl(long allowedSummaryNumBuffersLength, String srcFile, String dstFile, long numOffset, long leftNumLen, long rightNumLen) throws Exception {
+  private void mergeImpl(long allowedSummaryNumBuffersLength, 
+      String srcFile, String dstFile, 
+      long numOffset, 
+      long leftNumLen, long rightNumLen) throws Exception {
     // compare and swap:
     RandomAccessFile srcRaf = new RandomAccessFile(srcFile, "r");
     FileChannel srcFc = srcRaf.getChannel();

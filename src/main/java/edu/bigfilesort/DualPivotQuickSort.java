@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class DualPivotQuickSort implements InplaceSort {
 
   private final InplaceSortDataProvider provider;
-  private final AtomicLong comparisonCount = new AtomicLong(0); // TODO: prisobachit'
+  private final AtomicLong comparisonCount = new AtomicLong(0); // TODO: not added actually 
   
   public DualPivotQuickSort(InplaceSortDataProvider p0) {
     provider = p0;

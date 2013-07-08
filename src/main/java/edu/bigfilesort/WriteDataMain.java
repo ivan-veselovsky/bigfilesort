@@ -8,6 +8,8 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 import java.util.Random;
 
+import edu.bigfilesort.Util.Couple;
+
 public class WriteDataMain {
 
   /*
@@ -70,16 +72,19 @@ public class WriteDataMain {
   }
   
   void writeImpl(final String name, final long fileLength, final String modeStr) throws Exception {
-    long numWrites = fileLength / bufferSize;
-    long reminderLength =  fileLength % bufferSize;
-    if (reminderLength > 0) {
-      numWrites++;
-    }
-    if (reminderLength > 0) {
-      assert ((numWrites - 1) * bufferSize + reminderLength == fileLength);
-    } else {
-      assert (numWrites * bufferSize + reminderLength == fileLength);
-    }
+//    long numWrites = fileLength / bufferSize;
+//    long reminderLength =  fileLength % bufferSize;
+//    if (reminderLength > 0) {
+//      numWrites++;
+//    }
+//    if (reminderLength > 0) {
+//      assert ((numWrites - 1) * bufferSize + reminderLength == fileLength);
+//    } else {
+//      assert (numWrites * bufferSize + reminderLength == fileLength);
+//    }
+    Couple c = Util.divideByPiecesOfLength(fileLength, bufferSize);
+    final long numWrites = c.fraction;
+    final long reminderLength = c.remainder; 
     
     final RandomAccessFile raf = new RandomAccessFile(name, "rw");
     raf.setLength(fileLength);

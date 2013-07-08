@@ -7,13 +7,6 @@ package edu.bigfilesort;
  * should be documented.
  */
 public interface InplaceSortDataProvider {
-
-//  /**
-//   * Unconditionally exchanges 2 elements at the given indexes.
-//   * @param a
-//   * @param b
-//   */
-//  void exchange(int a, int b);
   
   /**
    * Gets the data element at the given index.

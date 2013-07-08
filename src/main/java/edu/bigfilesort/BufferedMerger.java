@@ -79,24 +79,19 @@ public class BufferedMerger {
     }
     
     void initBuffer() {
-      // NB: buffer may be re-allocated
+      // NB: buffer may be re-allocated in principle
       if (buf != null) {
         Util.disposeDirectByteBuffer(buf);
       }
-      if (bufferNumLength > regionNumLength) {
-        throw new IllegalStateException("Unecessary buffer length");
-      }
+      // NB: this check is too strict: current algorithm allows small regions to be merged.
+//      if (bufferNumLength > regionNumLength) {
+//        throw new IllegalStateException("Unecessary buffer length: buf="+bufferNumLength+" > regionNumLength="+regionNumLength);
+//      }
       int size = bufferNumLength << Main.log2DataLength;
-      if (Main.debug) { System.out.println("Allocating direct buffer of "+bufferNumLength+" ints."); }
+      //if (Main.debug) { System.out.println("Allocating direct buffer of "+bufferNumLength+" ints."); }
       buf = ByteBuffer.allocateDirect(size).order(Main.byteOrder);
     }
     
-    /**
-     * 1) If old buffer exists, flushes it to underlying storage and disposes the buffer.
-     * 2) Places buffer to a new position 
-     * 3) Pre-fetches the data into it (if needed)
-     * 4) Sets positions inside the buffer, so that it is ready for reading.   
-     */
     protected void placeBufferImpl() throws IOException {
       long numsToBuf = regionNumLength - buffered;
       // TODO: may truncate the buffer when needed. 
@@ -177,9 +172,10 @@ public class BufferedMerger {
       if (buf != null) {
         Util.disposeDirectByteBuffer(buf);
       }
-      if (bufferNumLength > regionNumLength) {
-        throw new IllegalStateException("Unecessary buffer length");
-      }
+//      // this check is overestimation:
+//      if (bufferNumLength > regionNumLength) {
+//        throw new IllegalStateException("Unnecessary buffer length");
+//      }
       int size = bufferNumLength << Main.log2DataLength;
       if (Main.debug) { System.out.println("Allocating direct buffer of "+bufferNumLength+" ints."); }
       buf = ByteBuffer.allocateDirect(size).order(Main.byteOrder);
@@ -240,8 +236,16 @@ public class BufferedMerger {
     // <= here because numbers  are truncated to ints:
     assert ( 2L * quaterInt + halfInt <= totalBufNumSize );
     
-    leftReadRegion = new BufferedReadRegion(leftReadFc, leftReadStartNumPos, leftNumLength, quaterInt);
-    rightReadRegion = new BufferedReadRegion(rightReadFc, rightReadStartNumPos, rightNumLength, quaterInt);
+    int leftBuffer = quaterInt;
+    int rightBuffer = quaterInt;
+    // optimize the case of copying:
+    if (rightNumLength == 0) {
+      leftBuffer <<= 1;
+      rightBuffer = 0;
+    }
+    
+    leftReadRegion = new BufferedReadRegion(leftReadFc, leftReadStartNumPos, leftNumLength, leftBuffer);
+    rightReadRegion = new BufferedReadRegion(rightReadFc, rightReadStartNumPos, rightNumLength, rightBuffer);
     
     writeRegion = new BufferedWriteRegion(writeFc, writeStartNumPos, leftNumLength + rightNumLength, halfInt); 
   }

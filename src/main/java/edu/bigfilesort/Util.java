@@ -1,7 +1,5 @@
 package edu.bigfilesort;
 
-import static java.lang.System.out;
-
 import java.nio.ByteBuffer;
 
 import sun.misc.Cleaner;
@@ -44,7 +42,7 @@ public class Util {
   
   public static void disposeDirectByteBuffer(ByteBuffer buf) {
     if (buf.isDirect() && buf instanceof DirectBuffer) {
-      int cap = buf.capacity();
+      //int cap = buf.capacity();
       /*
        * NB: DirectBuffer and Cleaner are not parts of the
        * official nio API. So, these classes may be changed in further
@@ -58,5 +56,55 @@ public class Util {
 //        }
       }
     }
+  }
+  
+  public static class Couple {
+    public final long fraction;
+    public final long remainder;
+    public Couple(long f, long rem) {
+      fraction = f;
+      remainder = rem;
+    }
+  }
+  
+  /**
+   * Some number of pieces not longer than "pieceSize" each.
+   * @param totalLength
+   * @param pieceSize
+   * @return
+   */
+  public static Couple divideByPiecesOfLength(long totalLength, long pieceSize) {
+    long numPieces = totalLength / pieceSize;
+    long reminderLength =  totalLength % pieceSize;
+    if (reminderLength > 0) {
+      numPieces++;
+    }
+    if (reminderLength > 0) {
+      assert ((numPieces - 1) * pieceSize + reminderLength == totalLength);
+    } else {
+      assert (numPieces * pieceSize + reminderLength == totalLength);
+    }
+    return new Couple(numPieces, reminderLength);
+  }
+
+  /**
+   * Desire exactly "numPieces" of approximately equal pieces
+   * @param totalNumbers
+   * @param numPieces
+   * @return
+   */
+  public static Couple divideByNumberOfPieces(final long totalNumbers, final long numPieces) {
+    long reminder = totalNumbers % numPieces;
+    long numbersInPiece = totalNumbers / numPieces;
+    if (reminder > 0) {
+       numbersInPiece++;
+       reminder = totalNumbers % numbersInPiece;
+    }
+    if (reminder == 0) {
+       assert (numbersInPiece * numPieces + reminder == totalNumbers);
+    } else {
+       assert (numbersInPiece * (numPieces - 1) + reminder == totalNumbers);
+    }
+    return new Couple(numbersInPiece, reminder);
   }
 }

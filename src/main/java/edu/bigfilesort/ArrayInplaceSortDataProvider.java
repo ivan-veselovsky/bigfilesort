@@ -1,7 +1,7 @@
 package edu.bigfilesort;
 
 import java.util.concurrent.atomic.AtomicLong;
-import static edu.bigfilesort.Util.*;
+
 
 public class ArrayInplaceSortDataProvider implements InplaceSortDataProvider {
 
@@ -19,17 +19,6 @@ public class ArrayInplaceSortDataProvider implements InplaceSortDataProvider {
     array = array0;
     indexShift = indexShift0;
   }
-  
-//  @Override
-//  public void exchange(int a, int b) {
-//    int ia = (int)(a + indexShift);
-//    int ib = (int)(b + indexShift);
-//    int t = array[ia];
-//    array[ia] = array[ib];
-//    array[ib] = t;
-//    assert retTrue( numberOfReads.addAndGet(2) );
-//    assert retTrue( numberOfWrites.addAndGet(2) );
-//  }
 
   @Override
   public int get(int a) {
