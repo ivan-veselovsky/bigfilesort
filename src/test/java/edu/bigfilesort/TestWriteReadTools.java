@@ -8,7 +8,7 @@ import static java.lang.System.out;
 
 public class TestWriteReadTools {
 
-  private static final int arrayLength = 1024 * 1024 * 257; 
+  private static final int arrayLength = 1024 * 1024 * 64; 
   
   protected long byteLength = ((long)arrayLength) * Main.dataLength;
   
@@ -21,7 +21,7 @@ public class TestWriteReadTools {
     long t = System.currentTimeMillis();
     WriteDataMain writeDataMain = new WriteDataMain();
     assertEquals(0, writeDataMain.mainImpl(file, "" + byteLength, 
-        WriteDataMain.Mode.rand.toString()));
+        WriteDataMain.Mode.asc.toString()));
     long delta = System.currentTimeMillis() - t;
     out.println("===== writing took " + delta + " ms");
     }

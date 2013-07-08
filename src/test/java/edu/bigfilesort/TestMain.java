@@ -26,7 +26,7 @@ public class TestMain {
     
     final long t0 = System.currentTimeMillis();
     
-    new Main().mainImpl(file, Integer.toString(threads), Long.toString(maxAllocInts));
+    new Main().mainImpl(file, Integer.toString(threads), Long.toString(maxAllocInts/Main.megaByte));
     
     final long delta0 = System.currentTimeMillis() - t0;
     System.out.println("Sorting took " + delta0 + " ms.");
