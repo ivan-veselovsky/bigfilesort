@@ -224,9 +224,9 @@ public class BufferedMerger {
       throw new IllegalArgumentException("Buffer too small for merging: " + totalBufNumSize);
     }
     long quater = totalBufNumSize / 4;
-    int reminder = (int)(totalBufNumSize % 4);
+    int remainder = (int)(totalBufNumSize % 4);
     int quaterInt = (int)quater;
-    int halfInt = (int)(2 * quater + reminder); // use reminder for the Half.
+    int halfInt = (int)(2 * quater + remainder); // use remainder for the Half.
 
     if (Main.debug) { 
       System.out.println("left/right buffer = " + quaterInt);

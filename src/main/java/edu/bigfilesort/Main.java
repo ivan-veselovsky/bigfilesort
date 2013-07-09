@@ -33,7 +33,7 @@ public class Main {
    
    public static boolean debug = false;
 
-   public static boolean countersEnabled = false; // counters in sort algorythms
+   public static boolean countersEnabled = false; // counters in sort algorithms
    
    // ----------------------------------------------------------------
    
@@ -63,12 +63,12 @@ public class Main {
       final long t = System.currentTimeMillis();
       int result = runImpl();
       long delta = System.currentTimeMillis() - t;
-      if (debug) { out.println("Time elapsed:  " + delta + " ms"); }
+      if (debug) { out.println("Sorting took: " + delta + " ms"); }
       return result;
    }
 
    private long intsToMegabytes(long ints/*4-byte numbers*/) {
-     return (ints * 4) / megaByte;
+     return (ints << log2DataLength) / megaByte;
    }
    
    private int setParameters(String[] args) throws Exception {
@@ -110,7 +110,12 @@ public class Main {
 
       // max alloc native
       if (args.length > 2) {
-        maxAllocNumbers = (megaByte * Long.parseLong(args[2]))/4;
+        long mb = Long.parseLong(args[2]);
+        if (mb <= 0) {
+          out.println("Max native alloc must be positive. (" + mb + " specified.)");
+          return 3;
+        }
+        maxAllocNumbers = (megaByte * mb) >> log2DataLength;
         out.println("Max alloc native (Mb): " + intsToMegabytes(maxAllocNumbers) );
       } else {
         out.println("Max alloc native (Mb): " + intsToMegabytes(maxAllocNumbers) + " (default).");

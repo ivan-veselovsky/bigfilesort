@@ -8,13 +8,13 @@ import static java.lang.System.out;
 
 public class TestWriteReadTools {
 
-  private static final int arrayLength = 1024 * 1024 * 64; 
+  private static final long arrayLength = 1024L * 1024 * 16; 
   
-  protected long byteLength = ((long)arrayLength) * Main.dataLength;
+  protected long byteLength = arrayLength << Main.log2DataLength;
   
   @Test
   public void testWriteRead() throws Exception {
-    String file = "near1g.data";
+    String file = "test-"+(byteLength/Main.megaByte)+"m.data";
 
     {
     out.println("===== writing...");

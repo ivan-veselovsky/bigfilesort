@@ -18,6 +18,8 @@ public class WriteDataMain {
    */
   static final long bufferSize = 1024L * 1024L * 64; 
   
+  private DataProvider dataProvider; 
+  
   enum Mode {
     asc, // ascending 
     desc, // descending
@@ -33,33 +35,67 @@ public class WriteDataMain {
     System.exit(status);
   }
   
-  private DataProvider dataProvider; 
-  
   void setProvider(DataProvider provider) {
     dataProvider = provider;
+  }
+  
+  private long parseWithMultiplier(String numberStr) {
+    char c = numberStr.charAt(numberStr.length() - 1);
+    final long mult;
+    if (Character.isDigit(c)) {
+      mult = 1;
+    } else {
+      switch (c) {
+        case 'k':
+        case 'K':  
+          mult = 1L << 10;
+          break;
+        case 'm':
+        case 'M':
+          mult = 1L << 20;
+          break;
+        case 'g':
+        case 'G':
+          mult = 1L << 30;
+          break;
+        case 't':
+        case 'T':
+          mult = 1L << 40;
+          break;
+        default:
+          throw new IllegalArgumentException("Unknown multiplier character ["+c+"]");
+      }
+      numberStr = numberStr.substring(0, numberStr.length() - 1);
+    }
+    long body = Long.parseLong(numberStr);
+    return mult * body;
   }
   
   int mainImpl(String... args) throws Exception {
     if (args.length < 3) {
       out.println("Paramaters: <file name> <length> <asc|desc|rand|flat>");
+      out.println("The following multimplier suffixes can be used for \"length\": k,m,g,t.");
       return 3;
     }
-    String fileName = args[0];
-    long length = Long.parseLong(args[1]);
+    
+    final String fileName = args[0];
+    
+    final long length = parseWithMultiplier(args[1]);
     if (length < 0) {
-      throw new IllegalArgumentException("Length must be positive. ("+length+").");
+      throw new IllegalArgumentException("Length must be positive. ("+args[1]+").");
     }
     if (length % Main.dataLength != 0) {
       throw new IllegalArgumentException("Length must be multiple of "+Main.dataLength+". (" +length+")");
     }
-    String modeStr = args[2];
+    
+    final String modeStr = args[2];
     
     if (bufferSize % Main.dataLength != 0) {
       throw new IllegalStateException("Buffer size must be multiple of "+Main.dataLength+".");
     }
     
     out.println("File name:   ["+fileName+"]");
-    out.println("Length:      ["+length+"]");
+    out.println("Length:      ["+length+"] bytes.");
     out.println("Write mode:  ["+modeStr+"]");
     
     final long t = System.currentTimeMillis();
@@ -72,19 +108,9 @@ public class WriteDataMain {
   }
   
   void writeImpl(final String name, final long fileLength, final String modeStr) throws Exception {
-//    long numWrites = fileLength / bufferSize;
-//    long reminderLength =  fileLength % bufferSize;
-//    if (reminderLength > 0) {
-//      numWrites++;
-//    }
-//    if (reminderLength > 0) {
-//      assert ((numWrites - 1) * bufferSize + reminderLength == fileLength);
-//    } else {
-//      assert (numWrites * bufferSize + reminderLength == fileLength);
-//    }
     Couple c = Util.divideByPiecesOfLength(fileLength, bufferSize);
     final long numWrites = c.fraction;
-    final long reminderLength = c.remainder; 
+    final long remainderLength = c.remainder; 
     
     final RandomAccessFile raf = new RandomAccessFile(name, "rw");
     raf.setLength(fileLength);
@@ -97,11 +123,10 @@ public class WriteDataMain {
       long writtenCount = 0;
       for (int i=0; i<numWrites; i++) {
         position = i * bufferSize;
-        len = (reminderLength > 0 
-                  && i == numWrites - 1) ? reminderLength : bufferSize;
+        len = (remainderLength > 0 
+                  && i == numWrites - 1) ? remainderLength : bufferSize;
         
         assert (len % Main.dataLength == 0);
-        //out.println("Position = " + position + ", length = " + len);
         
         MappedByteBuffer mbb = fc.map(MapMode.READ_WRITE, position, len);
         mbb.order(Main.byteOrder);
@@ -173,7 +198,6 @@ public class WriteDataMain {
         // 2nd half:
         result = startValue + secondHalfShift + (count - total/2) * increment; 
       }
-      //System.out.println(count + ": " + result); // XXX
       count++;
       return result;
     }

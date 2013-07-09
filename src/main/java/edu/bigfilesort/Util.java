@@ -75,16 +75,16 @@ public class Util {
    */
   public static Couple divideByPiecesOfLength(long totalLength, long pieceSize) {
     long numPieces = totalLength / pieceSize;
-    long reminderLength =  totalLength % pieceSize;
-    if (reminderLength > 0) {
+    long remainderLength =  totalLength % pieceSize;
+    if (remainderLength > 0) {
       numPieces++;
     }
-    if (reminderLength > 0) {
-      assert ((numPieces - 1) * pieceSize + reminderLength == totalLength);
+    if (remainderLength > 0) {
+      assert ((numPieces - 1) * pieceSize + remainderLength == totalLength);
     } else {
-      assert (numPieces * pieceSize + reminderLength == totalLength);
+      assert (numPieces * pieceSize + remainderLength == totalLength);
     }
-    return new Couple(numPieces, reminderLength);
+    return new Couple(numPieces, remainderLength);
   }
 
   /**
@@ -94,17 +94,17 @@ public class Util {
    * @return
    */
   public static Couple divideByNumberOfPieces(final long totalNumbers, final long numPieces) {
-    long reminder = totalNumbers % numPieces;
+    long remainder = totalNumbers % numPieces;
     long numbersInPiece = totalNumbers / numPieces;
-    if (reminder > 0) {
+    if (remainder > 0) {
        numbersInPiece++;
-       reminder = totalNumbers % numbersInPiece;
+       remainder = totalNumbers % numbersInPiece;
     }
-    if (reminder == 0) {
-       assert (numbersInPiece * numPieces + reminder == totalNumbers);
+    if (remainder == 0) {
+       assert (numbersInPiece * numPieces + remainder == totalNumbers);
     } else {
-       assert (numbersInPiece * (numPieces - 1) + reminder == totalNumbers);
+       assert (numbersInPiece * (numPieces - 1) + remainder == totalNumbers);
     }
-    return new Couple(numbersInPiece, reminder);
+    return new Couple(numbersInPiece, remainder);
   }
 }

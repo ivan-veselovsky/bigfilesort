@@ -50,18 +50,18 @@ public class CheckSortedMain {
     final long fileLength = raf.length();
     out.println("Length of ["+name+"] is " + fileLength);
     if (fileLength % Main.dataLength != 0) {
-    	throw new IllegalArgumentException("File length ("+fileLength+") must be mult of " + Main.dataLength);
+    	throw new IllegalArgumentException("File length ("+fileLength+") must be multiple of " + Main.dataLength);
     }
     
     long numWrites = fileLength / bufferSize;
-    long reminderLength =  fileLength % bufferSize;
-    if (reminderLength > 0) {
+    long remainderLength =  fileLength % bufferSize;
+    if (remainderLength > 0) {
       numWrites++;
     }
-    if (reminderLength > 0) {
-      assert ((numWrites - 1) * bufferSize + reminderLength == fileLength);
+    if (remainderLength > 0) {
+      assert ((numWrites - 1) * bufferSize + remainderLength == fileLength);
     } else {
-      assert (numWrites * bufferSize + reminderLength == fileLength);
+      assert (numWrites * bufferSize + remainderLength == fileLength);
     }
     
     fc.position(0);
@@ -72,8 +72,8 @@ public class CheckSortedMain {
       int leader = Integer.MIN_VALUE;
       for (int i=0; i<numWrites; i++) {
         position = i * bufferSize;
-        len = (reminderLength > 0 
-            && i == numWrites - 1) ? reminderLength : bufferSize;
+        len = (remainderLength > 0 
+            && i == numWrites - 1) ? remainderLength : bufferSize;
         
         assert (len % Main.dataLength == 0);
         
