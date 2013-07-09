@@ -90,7 +90,7 @@ public class Exec {
       boolean finishedOk = executor.awaitTermination(timeout, unit);
       errorHandler.printErrors();
       if (!finishedOk) {
-        throw new TimeoutException("Executor did not finish all tasks in ${timeout} ${unit}s.");
+        throw new TimeoutException("Executor did not finish all tasks in "+timeout+" "+unit+".");
       }
       errorHandler.abortIfNeeded();
     }

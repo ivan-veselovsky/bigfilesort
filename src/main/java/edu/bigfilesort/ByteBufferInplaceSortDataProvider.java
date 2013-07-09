@@ -1,11 +1,8 @@
 package edu.bigfilesort;
 
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
 import java.util.concurrent.atomic.AtomicLong;
 
-import sun.misc.Cleaner;
-import sun.nio.ch.DirectBuffer;
 import static edu.bigfilesort.Util.*;
 
 /**
