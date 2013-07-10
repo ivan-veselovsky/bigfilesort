@@ -54,3 +54,6 @@ TODO:
 2) planning: in some cases it is possible to start tasks in the next cascade while current is not yet finished. Consider to implement at least in simple cases.
 3) consider to implement the net sorting in the final stage of the algorythm. The benefit is questionable, should be checked experimentally.
    Related idea that can be used if only 2 threads are available for one merge task: start the merge from 2 ends in parallel, finish when they meet somewhere in between. This is much simplier than the net sort, but only allows merge paralleling in 2 threads, not more, while net sorting allows paralleling in large number of threads (proportional to the length of merged piece).
+
+4) It looks like in many cases RW operations are much slower (or may become such) than the comparison operations in memory. This leads to the following idea: what if we will merge not pairs of pieces, but "k" sorted pieces at once? In such case we need in O(log2(k)) times more comparison operations for entire merge, but we reduce the number of R/W operations in log2(k) times. If the R/W operations are really the bottleneck, we would optain significant benefit in performance, even thouh general solution assimptotic of N*log2(N) remains the same.
+
