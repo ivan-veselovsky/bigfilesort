@@ -30,8 +30,12 @@ Windows-32 (2-core, 2G RAM):
 1         769               9:30             1.48G (movie)  
 2         1024              8:15             1.48G (movie)
 
-1         793               8:48             1.48G (movie)  
-2         1580              5:41             1.48G (movie)  
+1         793  (*)          8:48             1.48G (movie)   
+2         1580 (**)         5:41             1.48G (movie)  
+
+(*)  -- 793m appears to be the largest amount of continously allocatable mapped memory on the used Win machine (where this limit comes from??)
+(**) -- 1580m is ~793m*2: 2 max allocatable mapped regions used, so the results are much better than in the previous case.
+------------------------------------------------------
 
 Here the "max-native" parameter is maximum amount of (direct + mapped) memory allowed to be used by the program (this is the 3rd command line parameter of "bigfilesort.sh"). This parameter was introduced in order to make the tool more reliable and stable (experience shows that on windows it's impossible to allocate mapped memory larger than some limit, and I don't know where this limit value comes from.)
 
@@ -48,3 +52,4 @@ TODO:
 1) planning: if there are less than num of threads tasks in the current cascade, and we don't start next cascade, give all the available resources to the pending tasks (if they may need more resources). Currently this is not the case, and planner always gives Res/threads resource to each task.
 2) planning: in some cases it is possible to start tasks in the next cascade while current is not yet finished. Consider to implement at least in simple cases.
 3) consider to implement the net sorting in the final stage of the algorythm. The benefit is questionable, should be checked experimentally.
+   Related idea that can be used if only 2 threads are available for one merge task: start the merge from 2 ends in parallel, finish when they meet somewhere in between. This is much simplier than the net sort, but only allows merge paralleling in 2 threads, not more, while net sorting allows paralleling in large number of threads (proportional to the length of merged piece).
