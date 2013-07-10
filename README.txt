@@ -6,7 +6,7 @@ The solution in general follows the initial plan: sorting by independent pieces 
 The project is buildable from checkout (mvn clean install -DskipTests). Tests also can be run, but that will take about 6 minutes and will generate some files in the current directory.
  Shell script launchers are present. Command line parameters of the scripts are explained when running them without parameters.
 
-I carried out the experiments primarily on CentOS 6.3 box (4-core, 16G ram, ordinary hard disk) using JDK7.
+I carried out the experiments primarily on CentOS 6.3 box (4-core, 16G ram, ordinary hard disk) using JDK6.
 The following performance data observed on files filled with random data:
  
 threads   max-native (Mb)   sorttime,min:sec file size (bytes)
@@ -27,7 +27,7 @@ threads   max-native (Mb)   sorttime,min:sec file size (bytes)
 5         2048              30:6             10G
 5         2048              152:44           32G
 ------------------------------------------------------
-Windows-32 (2-core, 2G RAM):
+Windows-32 (2-core, 2G RAM, JDK7):
 1         769               9:30             1.48G (movie)  
 2         1024              8:15             1.48G (movie)
 
