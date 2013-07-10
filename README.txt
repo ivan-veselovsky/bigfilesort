@@ -25,6 +25,7 @@ threads   max-native (Mb)   sorttime,min:sec file size (bytes)
 
 4         2048              6:33             4G
 5         2048              30:6             10G
+5         2048              152:44           32G
 ------------------------------------------------------
 Windows-32 (2-core, 2G RAM):
 1         769               9:30             1.48G (movie)  
