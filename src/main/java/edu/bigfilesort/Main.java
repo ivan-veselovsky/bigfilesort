@@ -34,7 +34,12 @@ public class Main {
    public static final boolean debug = false; // diagnostic output
 
    public static final boolean countersEnabled = false; // counters in sort algorithms
-   
+
+   /*
+    * On Windows-32 Mapped providers perform much slower (~3 times) than Direct (don't know why).
+    * On CentOS-64 the performance is nearly the same, though, Direct are faster by ~8%.
+    * So, to achieve best performance its recommended to use Direct mode.
+    */
    public static final boolean readWriteProvidersMapped = false; // 'true' to use "Mapped", 'false' to use "Direct".   
    
    // ----------------------------------------------------------------

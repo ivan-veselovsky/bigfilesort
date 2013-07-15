@@ -14,6 +14,12 @@ public class FileStorage implements Storage {
   private FileChannel fc; 
   private final long numLength;
   
+  /**
+   * Creates storage on an existing file, whose length is taken as 
+   * the storage length. No data lost in file unless we write to the storage.   
+   * @param fileName0
+   * @throws IOException
+   */
   public FileStorage(String fileName0) throws IOException {
     fileName = fileName0;
     raf = new RandomAccessFile(fileName, "rw");
@@ -22,6 +28,22 @@ public class FileStorage implements Storage {
       throw new IllegalArgumentException();
     }
     numLength = byteLen >> Main.log2DataLength;
+    fc = raf.getChannel();
+  }
+  
+  /**
+   * Creates new storage forcibly setting the new length.
+   * Note that the data in existing file, if any, may be lost. 
+   * @param fileName0
+   * @param numLen0
+   * @throws IOException
+   */
+  public FileStorage(String fileName0, long numLen0) throws IOException {
+    fileName = fileName0;
+    raf = new RandomAccessFile(fileName, "rw");
+    long byteLen = numLen0 << Main.log2DataLength;
+    raf.setLength(byteLen);
+    numLength = numLen0;
     fc = raf.getChannel();
   }
 
