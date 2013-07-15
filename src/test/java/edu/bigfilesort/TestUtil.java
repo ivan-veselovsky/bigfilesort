@@ -48,6 +48,17 @@ public class TestUtil {
     assertEquals(2, c.fraction);
     assertEquals(0, c.remainder);
     }
+
+    {
+    Couple c = divideByPiecesOfLength(10, 3);
+    assertEquals(4, c.fraction);
+    assertEquals(1, c.remainder);
+    }
+    {
+    Couple c = divideByNumberOfPieces(10, 3);
+    assertEquals(4, c.fraction);
+    assertEquals(2, c.remainder);
+    }
     
     {
     Couple c = divideByNumberOfPieces(101, 4);

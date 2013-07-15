@@ -2,14 +2,10 @@ package edu.bigfilesort;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 
 import org.junit.Test;
-
-import edu.bigfilesort.WriteDataMain.DataProvider;
-import edu.bigfilesort.WriteDataMain.MergeTestDataProvider;
 
 public class TestBufferedMerger {
   

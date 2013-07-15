@@ -20,7 +20,7 @@ public class WriteDataMain {
   
   private DataProvider dataProvider; 
   
-  enum Mode {
+  public enum Mode {
     asc, // ascending 
     desc, // descending
     flat, // equal numbers
@@ -71,7 +71,7 @@ public class WriteDataMain {
     return mult * body;
   }
   
-  int mainImpl(String... args) throws Exception {
+  public int mainImpl(String... args) throws Exception {
     if (args.length < 3) {
       out.println("Paramaters: <file name> <length> <asc|desc|rand|flat>");
       out.println("The following multimplier suffixes can be used for \"length\": k,m,g,t.");

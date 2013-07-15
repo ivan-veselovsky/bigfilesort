@@ -107,4 +107,11 @@ public class Util {
     }
     return new Couple(numbersInPiece, remainder);
   }
+  
+  public static int toIntNoTruncation(long x) {
+    if (x > Integer.MAX_VALUE || x < Integer.MIN_VALUE) {
+      throw new RuntimeException("long ["+Long.toHexString(x)+"] cannot be casted to int w/o truncation.");
+    }
+    return (int)x;
+  }
 }

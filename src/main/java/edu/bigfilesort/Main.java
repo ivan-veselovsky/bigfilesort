@@ -31,9 +31,11 @@ public class Main {
    
    public static final long megaByte = 1024L * 1024L; // auxiliary
    
-   public static boolean debug = false;
+   public static final boolean debug = false; // diagnostic output
 
-   public static boolean countersEnabled = false; // counters in sort algorithms
+   public static final boolean countersEnabled = false; // counters in sort algorithms
+   
+   public static final boolean readWriteProvidersMapped = false; // 'true' to use "Mapped", 'false' to use "Direct".   
    
    // ----------------------------------------------------------------
    
