@@ -19,7 +19,7 @@ import edu.bigfilesort.InplaceSort;
 import edu.bigfilesort.InplaceSortDataProvider;
 import edu.bigfilesort.Main;
 import edu.bigfilesort.Util;
-import edu.bigfilesort.Util.Couple;
+import edu.bigfilesort.Util.DivisionResult;
 
 import static java.lang.System.out;
 
@@ -52,6 +52,9 @@ public class TaskPlannerImpl implements TaskPlanner {
   
   // dynamic merging cascade variables:
   private int mergeCascadeIndex = 1;
+  
+  // XXX: these lists size is O(N). Not good. Strictly speaking, this 
+  // should be refactored because we may store O(1) data only: 
   private final List<Data> dataList = new ArrayList<Data>();
   private final List<Data> zDataList = new ArrayList<Data>();
   
@@ -84,9 +87,8 @@ public class TaskPlannerImpl implements TaskPlanner {
     assert (raf.length() % Main.dataLength == 0);
     
     {
-      Couple couple = Util.divideByNumberOfPieces(allocatableTotalNumbersMemory, threads);
-      allocNumbersPerOneThread = couple.fraction;
-      //allocNumbersLastThread = couple.remainder; // unused now
+      DivisionResult div = Util.divideByApproximatelyEqualParts(allocatableTotalNumbersMemory, threads);
+      allocNumbersPerOneThread = Math.max(div.largerPartLength, div.smallerPartLength);
     }
 
     sortingRangeSubmitCovered = 0;

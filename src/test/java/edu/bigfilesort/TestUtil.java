@@ -1,10 +1,17 @@
 package edu.bigfilesort;
 
+import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static edu.bigfilesort.Util.*;
 
 public class TestUtil {
+  
+  @Before
+  public void before() {
+    assert Util.assertionsEnabled();
+  }
+  
   @Test
   public void testLog2() {
     assertEquals(0, log2(1));
@@ -24,55 +31,66 @@ public class TestUtil {
   }
   
   @Test
-  public void testDivide() {
+  public void testDivideByApproximatelyEqualParts() {
     {
-    Couple c = divideByNumberOfPieces(7, 3);
-    assertEquals(3, c.fraction);
-    assertEquals(1, c.remainder);
-    }
-
-    {
-    Couple c = divideByNumberOfPieces(10, 5);
-    assertEquals(2, c.fraction);
-    assertEquals(0, c.remainder);
-    }
-    
-    {
-    Couple c = divideByPiecesOfLength(7, 3);
-    assertEquals(3, c.fraction);
-    assertEquals(1, c.remainder);
-    }
-    
-    {
-    Couple c = divideByPiecesOfLength(10, 5);
-    assertEquals(2, c.fraction);
-    assertEquals(0, c.remainder);
-    }
-
-    {
-    Couple c = divideByPiecesOfLength(10, 3);
-    assertEquals(4, c.fraction);
-    assertEquals(1, c.remainder);
+    DivisionResult c = divideByApproximatelyEqualParts(7, 3);
+    assertEquals(new DivisionResult(2, 2, 1, 3), c);
     }
     {
-    Couple c = divideByNumberOfPieces(10, 3);
-    assertEquals(4, c.fraction);
-    assertEquals(2, c.remainder);
-    }
-    
-    {
-    Couple c = divideByNumberOfPieces(101, 4);
-    // 4 pieces in total: 3 of length 26 and 1 of length 23.
-    // 101 = 3 * 26 + 23:
-    assertEquals(26, c.fraction);
-    assertEquals(23, c.remainder);
+    DivisionResult c = divideByApproximatelyEqualParts(149, 75);
+    assertEquals(new DivisionResult(1, 1, 74, 2), c);
     }
     {
-    Couple c = divideByPiecesOfLength(101, 4);
-    // 26 pieces in total, 25 of length 4 and 1 of length 1. 
-    // 101 = (26 - 1) * 4 + 1:
-    assertEquals(26, c.fraction);
-    assertEquals(1, c.remainder);
+    DivisionResult c = divideByApproximatelyEqualParts(77, 75);
+    assertEquals(new DivisionResult(73, 1, 2, 2), c);
+    }
+    {
+    DivisionResult c = divideByApproximatelyEqualParts(20, 3);
+    assertEquals(new DivisionResult(1, 6, 2, 7), c);
+    }
+    {
+    DivisionResult c = divideByApproximatelyEqualParts(9, 4);
+    assertEquals(new DivisionResult(3, 2, 1, 3), c);
+    }
+    {
+    DivisionResult c = divideByApproximatelyEqualParts(10, 5);
+    assertEquals(new DivisionResult(0, 0, 5, 2), c);
+    }
+    {
+    DivisionResult c = divideByApproximatelyEqualParts(101, 4);
+    assertEquals(new DivisionResult(3, 25, 1, 26), c);
+    }
+    {
+    DivisionResult c = divideByApproximatelyEqualParts(10, 3);
+    assertEquals(new DivisionResult(2, 3, 1, 4), c);
+    }
+  }  
+  
+  @Test
+  public void testDivideNotLonger() {
+    {
+    DivisionResult c = divideNotLonger(7, 3);
+    assertEquals(new DivisionResult(1, 1, 2, 3), c);
+    }
+    {
+    DivisionResult c = divideNotLonger(10, 5);
+    assertEquals(new DivisionResult(0, 0, 2, 5), c);
+    }
+    {
+    DivisionResult c = divideNotLonger(10, 3);
+    assertEquals(new DivisionResult(1, 1, 3, 3), c);
+    }
+    {
+    DivisionResult c = divideNotLonger(101, 4);
+    assertEquals(new DivisionResult(1, 1, 25, 4), c);
+    }
+    {
+    DivisionResult c = divideNotLonger(149, 75);
+    assertEquals(new DivisionResult(1, 74, 1, 75), c);
+    }
+    {
+    DivisionResult c = divideNotLonger(77, 75);
+    assertEquals(new DivisionResult(1, 2, 1, 75), c);
     }
   }
 }

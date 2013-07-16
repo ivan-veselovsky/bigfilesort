@@ -6,18 +6,14 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
+import edu.bigfilesort.Util;
 import edu.bigfilesort.UtilForTest;
 
 public class TestRadixArray {
 
   @Before
   public void before() {
-    assert assertionsEnabled();
-  }
-  
-  private boolean assertionsEnabled() {
-    System.out.println("Assertions enabled.");
-    return true;
+    assert Util.assertionsEnabled();
   }
   
   void testImpl(int[] arr) throws IOException {

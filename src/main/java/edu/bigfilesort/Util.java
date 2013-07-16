@@ -58,12 +58,45 @@ public class Util {
     }
   }
   
-  public static class Couple {
-    public final long fraction;
-    public final long remainder;
-    public Couple(long f, long rem) {
-      fraction = f;
-      remainder = rem;
+  public static final class DivisionResult {
+    public final long smallerParts;
+    public final long smallerPartLength;
+    public final long largerParts;
+    public final long largerPartLength;
+    public DivisionResult(long sp, long spLen, long lp, long lpLen) {
+      // larger part must be larger than the smaller part:
+      if (lpLen <= spLen) {
+        throw new IllegalArgumentException(lpLen + " <= " + spLen);
+      }
+      smallerParts = sp;
+      smallerPartLength = spLen;
+      largerParts = lp;
+      largerPartLength = lpLen;
+    }
+    public long totalParts() {
+      return smallerParts + largerParts;
+    }
+    public long totalLength() {
+      return smallerParts * smallerPartLength + largerParts * largerPartLength;
+    }
+    @Override
+    public boolean equals(Object obj) {
+      if (obj instanceof DivisionResult) {
+        DivisionResult other = (DivisionResult)obj;
+        return (other.smallerParts == smallerParts)
+            && (other.smallerPartLength == smallerPartLength)
+            && (other.largerParts == largerParts)
+            && (other.largerPartLength == largerPartLength);
+      }
+      return false;
+    }
+    @Override
+    public int hashCode() {
+      throw new UnsupportedOperationException("Not intended to be used in hash-based collections.");
+    }
+    @Override
+    public String toString() {
+      return smallerParts + " * " + smallerPartLength +" + " + largerParts  + " * " +  largerPartLength;
     }
   }
   
@@ -73,39 +106,34 @@ public class Util {
    * @param pieceSize
    * @return
    */
-  public static Couple divideByPiecesOfLength(long totalLength, long pieceSize) {
-    long numPieces = totalLength / pieceSize;
-    long remainderLength =  totalLength % pieceSize;
-    if (remainderLength > 0) {
-      numPieces++;
-    }
-    if (remainderLength > 0) {
-      assert ((numPieces - 1) * pieceSize + remainderLength == totalLength);
-    } else {
-      assert (numPieces * pieceSize + remainderLength == totalLength);
-    }
-    return new Couple(numPieces, remainderLength);
+  public static DivisionResult divideNotLonger(final long totalLength, final long pieceSize) {
+    long f = totalLength / pieceSize;
+    long r = totalLength % pieceSize;
+    long smallerParts = (r > 0) ? 1 : 0;
+    DivisionResult dr = new DivisionResult(smallerParts, r, f, pieceSize);
+    assert (dr.totalLength() == totalLength);
+    assert (dr.largerPartLength == pieceSize);
+    return dr;
   }
 
   /**
    * Desire exactly "numPieces" of approximately equal pieces
-   * @param totalNumbers
-   * @param numPieces
-   * @return
+   * @param totalApples total amount of apples to divide
+   * @param numParts
+   * @return the division result
    */
-  public static Couple divideByNumberOfPieces(final long totalNumbers, final long numPieces) {
-    long remainder = totalNumbers % numPieces;
-    long numbersInPiece = totalNumbers / numPieces;
-    if (remainder > 0) {
-       numbersInPiece++;
-       remainder = totalNumbers % numbersInPiece;
-    }
-    if (remainder == 0) {
-       assert (numbersInPiece * numPieces + remainder == totalNumbers);
+  public static DivisionResult divideByApproximatelyEqualParts(final long totalApples, final long numParts) {
+    long f = totalApples / numParts;
+    long r = totalApples % numParts;
+    final DivisionResult dr;
+    if (r == 0) {
+      dr = new DivisionResult(0, 0,  numParts, f);
     } else {
-       assert (numbersInPiece * (numPieces - 1) + remainder == totalNumbers);
+      dr = new DivisionResult(numParts - r, f,  r, f + 1);
     }
-    return new Couple(numbersInPiece, remainder);
+    assert (dr.totalLength() == totalApples);
+    assert (dr.totalParts() == numParts);
+    return dr;
   }
   
   public static int toIntNoTruncation(long x) {
@@ -113,5 +141,10 @@ public class Util {
       throw new RuntimeException("long ["+Long.toHexString(x)+"] cannot be casted to int w/o truncation.");
     }
     return (int)x;
+  }
+  
+  public static boolean assertionsEnabled() {
+    System.out.println("Assertions enabled.");
+    return true;
   }
 }

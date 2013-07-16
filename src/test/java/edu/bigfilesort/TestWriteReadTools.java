@@ -2,6 +2,7 @@ package edu.bigfilesort;
 
 import static org.junit.Assert.assertEquals;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import static java.lang.System.out; 
@@ -11,6 +12,11 @@ public class TestWriteReadTools {
   private static final long arrayLength = 1024L * 1024 * 16; 
   
   protected long byteLength = arrayLength << Main.log2DataLength;
+  
+  @Before
+  public void before() {
+    assert Util.assertionsEnabled();
+  }
   
   @Test
   public void testWriteRead() throws Exception {

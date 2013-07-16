@@ -8,7 +8,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 import java.util.Random;
 
-import edu.bigfilesort.Util.Couple;
+import edu.bigfilesort.Util.DivisionResult;
 
 public class WriteDataMain {
 
@@ -108,9 +108,9 @@ public class WriteDataMain {
   }
   
   void writeImpl(final String name, final long fileLength, final String modeStr) throws Exception {
-    Couple c = Util.divideByPiecesOfLength(fileLength, bufferSize);
-    final long numWrites = c.fraction;
-    final long remainderLength = c.remainder; 
+    DivisionResult div = Util.divideNotLonger(fileLength, bufferSize);
+    final long numWrites = div.totalParts();
+    final long remainderLength = div.smallerPartLength; 
     
     final RandomAccessFile raf = new RandomAccessFile(name, "rw");
     raf.setLength(fileLength);
