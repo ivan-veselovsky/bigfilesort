@@ -6,7 +6,7 @@ package edu.bigfilesort.parallel;
  */
 public class Resource {
   
-  final long allowedNumNativeMemory;
+  public final long allowedNumNativeMemory;
   
   public Resource(long allowedNumNativeMemory0) {
     allowedNumNativeMemory = allowedNumNativeMemory0;

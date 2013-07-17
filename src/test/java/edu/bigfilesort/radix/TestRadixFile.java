@@ -45,8 +45,8 @@ public class TestRadixFile {
     
     final Storage mainStorage = new FileStorage(srcFile);
     final Storage tmpStorage = new FileStorage(tmpFile);
-    final RadixSort radix = new RadixSort(mainStorage, tmpStorage, bufLen);
-    radix.sort();
+    final RadixSort radix = new RadixSort(mainStorage, tmpStorage);
+    radix.sort(bufLen);
     mainStorage.close();
     tmpStorage.close();
     
@@ -78,8 +78,8 @@ public class TestRadixFile {
     
     final Storage mainStorage = new FileStorage(srcFile);
     final Storage tmpStorage = new FileStorage(tmpFile);
-    final RadixSort radix = new RadixSort(mainStorage, tmpStorage, bufLen);
-    radix.sort();
+    final RadixSort radix = new RadixSort(mainStorage, tmpStorage);
+    radix.sort(bufLen);
     mainStorage.close();
     tmpStorage.close();
     
@@ -111,8 +111,8 @@ public class TestRadixFile {
     
     final Storage mainStorage = new FileStorage(srcFile);
     final Storage tmpStorage = new FileStorage(tmpFile);
-    final RadixSort radix = new RadixSort(mainStorage, tmpStorage, bufLen);
-    radix.sort();
+    final RadixSort radix = new RadixSort(mainStorage, tmpStorage);
+    radix.sort(bufLen);
     mainStorage.close();
     tmpStorage.close();
     
@@ -147,8 +147,8 @@ public class TestRadixFile {
     long t = System.currentTimeMillis();
     final Storage mainStorage = new FileStorage(srcFile);
     final Storage tmpStorage = new FileStorage(tmpFile);
-    final RadixSort radix = new RadixSort(mainStorage, tmpStorage, bufNumLen);
-    radix.sort();
+    final RadixSort radix = new RadixSort(mainStorage, tmpStorage);
+    radix.sort(bufNumLen);
     mainStorage.close();
     tmpStorage.close();
     long delta = System.currentTimeMillis() - t;

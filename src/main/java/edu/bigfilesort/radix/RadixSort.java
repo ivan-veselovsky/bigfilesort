@@ -24,22 +24,26 @@ public class RadixSort {
   static final int numDigitValues = 1 << bitsPerDigit;
   // --------------------------------------------
 
+  static final int writeBuffersRatio = 8;
+  
+  
+  
   private final Storage mainStorage, tmpStorage;
-  private final long totalBuf;
+  //private final long totalBuf;
   private final long numLength;
   
-  public RadixSort(Storage mainStorage0, Storage tmpStorage0, long totalBuf0) {
+  public RadixSort(Storage mainStorage0, Storage tmpStorage0) {
     mainStorage = mainStorage0;
     numLength = mainStorage.length();
     tmpStorage = tmpStorage0;
-    totalBuf = totalBuf0;
+    //totalBuf = totalBuf0;
   }
   
   /**
    * Entry point.
    * Main logic described here.
    */
-  public void sort() throws IOException {
+  public void sort(long totalBuf) throws IOException {
     ForwardDistribution distribution;
     Storage destinationStorage;
     Storage srcStorage;
@@ -55,8 +59,7 @@ public class RadixSort {
         destinationStorage = mainStorage;
       }
 
-      final int writeBuffersRatio = 8;
-      distribution = new ForwardDistribution(d, destinationStorage, ((writeBuffersRatio - 1) * totalBuf)/writeBuffersRatio ); //was: 1/2
+      distribution = new ForwardDistribution(d, destinationStorage); //was: 1/2
       // here we use all the available buffer space since no writing is performed yet:
       // XXX: yes, can use total buf space, but Windows does not allow to alloc one continuous piece, so /2 it:
       readProvider = srcStorage.createReadProvider(0, numLength, Util.toIntNoTruncation(totalBuf/2) );
@@ -67,7 +70,8 @@ public class RadixSort {
       System.out.println("Counting finished: " + (System.currentTimeMillis() - t)/1000 + " sec");
       
       readProvider.dispose();
-      distribution.createWriteProviders(); // create write providers according to the regions 
+      long writeTotalBuf = ((writeBuffersRatio - 1) * totalBuf)/writeBuffersRatio;
+      distribution.createWriteProviders(writeTotalBuf); // create write providers according to the regions 
       
       distribution.disposeCounters(); // counters are not needed any more 
       
@@ -98,7 +102,7 @@ public class RadixSort {
     long count = 0;
     while (rp.hasNext()) {
       srcValue = rp.next();
-      distribution.write(srcValue);
+      distribution.write(srcValue, null);
       count++;
     }
     assert (count == mainStorage.length());

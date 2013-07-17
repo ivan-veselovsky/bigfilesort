@@ -4,18 +4,14 @@ import java.util.concurrent.Callable;
 
 public abstract class ResourceTask  implements Callable<Void> {
 
-  final int id;
-  final boolean isSorting;
-  protected final Resource resource; 
+  protected final int id;
+  public final boolean isSorting;
+  public final Resource resource; 
   
   public ResourceTask(int id0, Resource r, boolean sorting) {
     id = id0;
     resource = r;
     isSorting = sorting;
-  }
-  
-  public final Resource getResource() {
-    return resource;
   }
 
   @Override

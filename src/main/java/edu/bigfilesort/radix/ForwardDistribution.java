@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import edu.bigfilesort.Util;
+import edu.bigfilesort.util.Range;
 import static edu.bigfilesort.radix.RadixSort.*;
 
 public class ForwardDistribution {
@@ -26,12 +27,10 @@ public class ForwardDistribution {
   
   private final Storage destinationStorage;
   
-  private final long totalNumBufferSpace;
-  
-  long total; // total numbers counted. Assigned in #integrate()
+  long total; 
 
   
-  public ForwardDistribution(int digitNumber0, Storage destinationStorage0, long bufSpace) {
+  public ForwardDistribution(int digitNumber0, Storage destinationStorage0) {
     counters = new AtomicLong[numDigitValues];
     for (int i=0; i<counters.length; i++) {
       counters[i] = new AtomicLong(0);
@@ -54,10 +53,9 @@ public class ForwardDistribution {
     }
     
     destinationStorage = destinationStorage0;
-    totalNumBufferSpace = bufSpace;
   }
   
-  protected void createWriteProviders() throws IOException {
+  protected void createWriteProviders(long totalBuf) throws IOException {
     long sum = 0;
     long regionStart, regionLength;
     int buf;
@@ -68,7 +66,7 @@ public class ForwardDistribution {
       regionLength = getRegionLength(regionIndex);
       if (regionLength > 0) {
         sum += regionLength;
-        buf = Util.toIntNoTruncation((totalNumBufferSpace * regionLength) / total);
+        buf = Util.toIntNoTruncation((totalBuf * regionLength) / total);
         if (buf == 0) {
           buf = 16; // fallback for very small totalNumBufferSpace 
         }
@@ -176,13 +174,12 @@ public class ForwardDistribution {
    * in different threads only different digitValues. 
    * @param srcValue
    */
-  public void write(int srcValue /*, int digitValueMask*/) throws IOException {
+  public void write(int srcValue, Range digitRange) throws IOException {
     int digitValue = getDigitValue(srcValue);
-    //if (digitValue & digitValueMask) {}
     int index = digitValue - minDigitValue;
-    //long posUnused = getNextPosition(digitValue);
-    //dst[(int)pos] = srcValue;
-    regionWriteProviders[index].put(srcValue);
+    if (digitRange == null/*no filter*/ || digitRange.contains(index)) {
+      regionWriteProviders[index].put(srcValue);
+    }
   }
   
 }

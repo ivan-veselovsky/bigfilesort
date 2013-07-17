@@ -23,8 +23,8 @@ public class TestRadixArray {
     UtilForTest.fillArrayRandom(tmp, 0x1234567890ABCDEFL);
     Storage tmpStorage = new ArrayStorage(tmp);
     assertEquals(arr.length, tmpStorage.length());
-    final RadixSort radix = new RadixSort(mainStorage, tmpStorage, 0);
-    radix.sort();
+    final RadixSort radix = new RadixSort(mainStorage, tmpStorage);
+    radix.sort(0);
     UtilForTest.assertArraySorted(arr);
   }
   
