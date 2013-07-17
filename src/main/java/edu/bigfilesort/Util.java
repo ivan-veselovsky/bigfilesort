@@ -64,8 +64,8 @@ public class Util {
     public final long largerParts;
     public final long largerPartLength;
     public DivisionResult(long sp, long spLen, long lp, long lpLen) {
-      // larger part must be larger than the smaller part:
-      if (lpLen <= spLen) {
+      // if larger part length > 0, larger part must be larger than the smaller part:
+      if (lpLen > 0 && lpLen <= spLen) {
         throw new IllegalArgumentException(lpLen + " <= " + spLen);
       }
       smallerParts = sp;
