@@ -8,6 +8,7 @@ import static org.junit.Assert.*;
 
 import edu.bigfilesort.Util;
 import edu.bigfilesort.UtilForTest;
+import edu.bigfilesort.util.Checksum;
 
 public class TestRadixArray {
 
@@ -16,16 +17,28 @@ public class TestRadixArray {
     assert Util.assertionsEnabled();
   }
   
-  void testImpl(int[] arr) throws IOException {
+  void testImpl(final int[] arr) throws IOException {
+    final Checksum sum0 = Checksum.calculateChecksum(arr);
+    System.out.println(sum0);
+    
     Storage mainStorage = new ArrayStorage(arr);
     assertEquals(arr.length, mainStorage.length());
     int[] tmp = new int[arr.length];
     UtilForTest.fillArrayRandom(tmp, 0x1234567890ABCDEFL);
     Storage tmpStorage = new ArrayStorage(tmp);
+    
+    sortImpl(mainStorage, tmpStorage);
+    
     assertEquals(arr.length, tmpStorage.length());
+    final Checksum sum1 = Checksum.calculateChecksum(arr);
+    System.out.println(sum1);
+    UtilForTest.assertArraySorted(arr); // verify sorting
+    assertEquals(sum0, sum1); // verify checksum
+  }
+  
+  protected void sortImpl(Storage mainStorage, Storage tmpStorage) throws IOException {
     final RadixSort radix = new RadixSort(mainStorage, tmpStorage);
     radix.sort(0);
-    UtilForTest.assertArraySorted(arr);
   }
   
   @Test

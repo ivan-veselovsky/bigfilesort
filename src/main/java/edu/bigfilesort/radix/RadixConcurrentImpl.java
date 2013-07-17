@@ -6,8 +6,6 @@ import edu.bigfilesort.Util;
 import edu.bigfilesort.util.Range;
 
 public class RadixConcurrentImpl {
-
-  private static final int writeBuffersRatio = 8;  
   
   private Storage srcStorage;
   private Storage destinationStorage;
@@ -19,7 +17,6 @@ public class RadixConcurrentImpl {
   
   public RadixConcurrentImpl(Storage mainStorage0, Storage tmpStorage0, int digitNumber0) {
     digitNumber = digitNumber0;
-    System.out.println("=========================== digit #" + digitNumber);
     // place the storages to the required src/dst positions: 
     if (digitNumber % 2 == 0) {
       srcStorage = mainStorage0;
@@ -63,12 +60,10 @@ public class RadixConcurrentImpl {
     if (!integrated.compareAndSet(false, true)) {
       throw new IllegalStateException("must be integrated only once.");
     }
-    assert (distribution.total == srcStorage.length()); // all the values must be counted
     distribution.integrate(); // integrate the distribution
+    assert (distribution.total == srcStorage.length()); // all the values must be counted
 
     // prepare for the data moving:
-    // TODO: buf?
-    //long writeProvidersBuf = ((writeBuffersRatio - 1) * totalBuf)/writeBuffersRatio;
     distribution.createWriteProviders(totalWriteProvidersBuf); // create write providers according to the regions 
     distribution.disposeCounters(); // counters are not needed any more 
   }
@@ -86,7 +81,7 @@ public class RadixConcurrentImpl {
     // Note that the read provider created for the entire number range:
     ReadProvider readProvider 
       = srcStorage.createReadProvider(0, srcStorage.length(), Util.toIntNoTruncation(bufForReadProvider));
-    // write data from src -> dst
+    // write data from src -> dst:
     int srcValue;
     while (readProvider.hasNext()) {
       srcValue = readProvider.next();

@@ -19,6 +19,8 @@ import edu.bigfilesort.util.Range;
 
 public class RadixPlannerImpl implements TaskPlanner {
   
+  private static final int writeBuffersRatio = 2;  
+  
   private final int threads;
   private final long totalNumbers; // full size of the initial array to be sorted, in numbers.
   
@@ -31,7 +33,7 @@ public class RadixPlannerImpl implements TaskPlanner {
   private final long allocatableTotalNumbersMemory;
 
   private final DivisionResult allocMemoryPerThread;
-  private final LargeFirstDivisionResultIterator allocMemoryIterator;
+  private LargeFirstDivisionResultIterator allocMemoryIterator;
   
   private final DivisionResult numbersPerThread;
   private final LargeFirstDivisionResultIterator numberRangeIterator;
@@ -40,13 +42,14 @@ public class RadixPlannerImpl implements TaskPlanner {
   private final LargeFirstDivisionResultIterator digitValuesRangeIterator;   
   
   // dynamic sorting cascade variables:
+  private boolean integrated = false;
   private long sortingTasksSubmitted = 0; 
   private long sortingTasksDone = 0;
   
   private long countingTasksSubmitted = 0;
   private long countingTasksDone = 0;
   
-  int digitNumber = 0;
+  int digitNumber = 0; // serves as sorting cascade index
   private long allocResource; // the total allocatable memory resource counter
 
   // locks:
@@ -99,20 +102,17 @@ public class RadixPlannerImpl implements TaskPlanner {
     try {
       while (true) {
         // 1. counting tasks:
-        {
-          final Range numberRange = numberRangeIterator.next();
-          if (numberRange != null) {
-            // compose and submit a new counting task:
-            Range alloc = allocMemoryIterator.next();
-            assert (alloc != null); // memory is divided by "threads" as well as
-                                    // the digit values range.
-            checkAlloc(alloc.length);
-            allocResource -= alloc.length;
-            assert (allocResource >= 0);
-            countingTasksSubmitted++;
-            return new CountingTask(taskId, new Resource(alloc.length),
-                digitNumber, numberRange, radixConcurrentImpl);
-          }
+        final Range numberRange = numberRangeIterator.next();
+        if (numberRange != null) {
+          // compose and submit a new counting task:
+          Range alloc = allocMemoryIterator.next();
+          assert (alloc != null); // memory is divided by "threads" as well as entire the number range.
+          checkAlloc(alloc.length);
+          allocResource -= alloc.length;
+          assert (allocResource >= 0);
+          countingTasksSubmitted++;
+          return new CountingTask(taskId, new Resource(alloc.length),
+              digitNumber, numberRange, radixConcurrentImpl);
         }
         // all counting tasks submitted.
         // wait all the counting tasks to finish completely:
@@ -121,19 +121,23 @@ public class RadixPlannerImpl implements TaskPlanner {
         }
         assert (countingTasksDone == countingTasksSubmitted);
         assert (sortingTasksSubmitted == 0);
-        assert (allocResource == allocatableTotalNumbersMemory);
-        allocMemoryIterator.reset();
+        assert (allocResource == allocatableTotalNumbersMemory); // all the memory is freed
         
-        // 2. Integrate the Radix. Do not submit special task for that since this is very fast:
-        // TODO: alloc correct space for write buffers and pass it in here: 
-        //long writeProvidersBuf = ((writeBuffersRatio - 1) * totalBuf)/writeBuffersRatio;
-        radixConcurrentImpl.integrate();
+        final long writeProvidersBuf = ((writeBuffersRatio - 1) * allocResource)/writeBuffersRatio;
+        if (!integrated) {
+          // 2. Integrate the Radix. Do not submit special task for that since this is very fast:
+          radixConcurrentImpl.integrate(writeProvidersBuf);
+          integrated = true;
+          
+          allocResource -= writeProvidersBuf; // subtract the amount spent for the writing buffers
+          // divide the remaining amount of the memory by the threads:
+          allocMemoryIterator = new LargeFirstDivisionResultIterator(Util.divideByApproximatelyEqualParts(allocResource, threads));
+        }
 
         // 3. Sorting tasks:
         final Range digitValueRange = digitValuesRangeIterator.next();
         if (digitValueRange != null) {
           // compose and submit next sorting task:
-          // TODO: Util.toIntNoTruncation(buf/writeBuffersRatio)
           Range alloc = allocMemoryIterator.next();
           assert (alloc != null); // memory is divided by "threads" as well as
                                   // the digit values range.
@@ -149,17 +153,18 @@ public class RadixPlannerImpl implements TaskPlanner {
           condition.await();
         }
         assert (sortingTasksDone == sortingTasksSubmitted);
-        assert (allocResource == allocatableTotalNumbersMemory);
 
         // 4. finish processing of this digit:
-        radixConcurrentImpl.finish();
+        radixConcurrentImpl.finish(); // write buffers are freed there.
+        allocResource += writeProvidersBuf;
+        assert (allocResource == allocatableTotalNumbersMemory);
         
         // next digit:
         digitNumber++;
         if (digitNumber == RadixSort.numberOfDigits) {
           return null; // done, no more tasks.
         }
-        nextDigit();
+        nextDigit(); // next digit
       }
     } finally {
       lock.unlock();
@@ -175,6 +180,8 @@ public class RadixPlannerImpl implements TaskPlanner {
   }
   
   private void nextDigit() {
+    integrated = false;
+    
     sortingTasksSubmitted = 0;
     sortingTasksDone = 0;
     
@@ -182,7 +189,8 @@ public class RadixPlannerImpl implements TaskPlanner {
     countingTasksDone = 0;
     
     digitValuesRangeIterator.reset();
-    allocMemoryIterator.reset();
+    //allocMemoryIterator.reset();
+    allocMemoryIterator = new LargeFirstDivisionResultIterator(Util.divideByApproximatelyEqualParts(allocResource, threads));
     numberRangeIterator.reset();
     // re-create radix impl for next digit:
     radixConcurrentImpl = new RadixConcurrentImpl(mainStorage, tmpStorage, digitNumber);

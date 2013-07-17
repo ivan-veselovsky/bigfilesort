@@ -5,6 +5,9 @@ import java.io.IOException;
 import edu.bigfilesort.Main;
 import edu.bigfilesort.Util;
 
+/**
+ * Plain single-thread implementation. 
+ */
 public class RadixSort {
 
   // Radix constants: --------------------------
@@ -24,19 +27,18 @@ public class RadixSort {
   static final int numDigitValues = 1 << bitsPerDigit;
   // --------------------------------------------
 
-  static final int writeBuffersRatio = 8;
-  
+  // Internal implementation constant that specifies
+  // ratio = (totalReadBuffers + totalWriteBuffers)/totalReadBuffers: 
+  static final int writeBuffersRatio = 2;
   
   
   private final Storage mainStorage, tmpStorage;
-  //private final long totalBuf;
   private final long numLength;
   
   public RadixSort(Storage mainStorage0, Storage tmpStorage0) {
     mainStorage = mainStorage0;
     numLength = mainStorage.length();
     tmpStorage = tmpStorage0;
-    //totalBuf = totalBuf0;
   }
   
   /**

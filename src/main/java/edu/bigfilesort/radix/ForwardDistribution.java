@@ -7,6 +7,15 @@ import edu.bigfilesort.Util;
 import edu.bigfilesort.util.Range;
 import static edu.bigfilesort.radix.RadixSort.*;
 
+/**
+ * Represents statistical distribution of the specified digit value
+ * over the target array.
+ * 
+ * "Forward" in the name means that this distribution integration is 
+ * done in such a way that the values can be taken serially
+ * in normal iteration order, from the beginning to the end.
+ * (Normally in radix sort algorithm the values are taken in the reverse order.)   
+ */
 public class ForwardDistribution {
   
   static final int mask0 = numDigitValues - 1;
@@ -127,7 +136,7 @@ public class ForwardDistribution {
    * integrates the distribution for backward traversing (decrement)
    */
   public void integrate() {
-    integrateBackward(); // total is set here
+    integrateBackward(); // NB: total is set here
     for (int i=counters.length - 1; i>0; i--) {
       counters[i].set(counters[i - 1].get());
     }
