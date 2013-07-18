@@ -45,7 +45,7 @@ public class TestRadixFile {
 //        WriteDataMain.Mode.desc.toString()
 //        ));
     
-    final Storage mainStorage = new FileStorage(srcFile);
+    final Storage mainStorage = new FileStorage(srcFile, false);
     final Storage tmpStorage = new FileStorage(tmpFile, mainStorage.length());
     final Checksum sum0 = Checksum.calculateChecksum(mainStorage, (int)(bufLen/2));
     System.out.println("Checksum0: " + sum0);
@@ -59,7 +59,7 @@ public class TestRadixFile {
     
     // check sorting:
     assertEquals(0, CheckSortedMain.mainImpl(srcFile));
-    final Checksum sum1 = Checksum.calculateChecksum(new FileStorage(srcFile), (int)(bufLen/2));
+    final Checksum sum1 = Checksum.calculateChecksum(new FileStorage(srcFile, true), (int)(bufLen/2));
     System.out.println("Checksum1: " + sum1);
     assertEquals(sum0, sum1);
   }

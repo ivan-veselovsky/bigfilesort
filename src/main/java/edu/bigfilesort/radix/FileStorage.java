@@ -13,6 +13,7 @@ public class FileStorage implements Storage {
   private RandomAccessFile raf;
   private FileChannel fc; 
   private final long numLength;
+  private final boolean readOnly;
   
   /**
    * Creates storage on an existing file, whose length is taken as 
@@ -20,9 +21,11 @@ public class FileStorage implements Storage {
    * @param fileName0
    * @throws IOException
    */
-  public FileStorage(String fileName0) throws IOException {
+  public FileStorage(String fileName0, boolean readOnly0) throws IOException {
     fileName = fileName0;
-    raf = new RandomAccessFile(fileName, "rw");
+    readOnly = readOnly0;
+    String mode = readOnly ? "r" : "rw";
+    raf = new RandomAccessFile(fileName, mode);
     long byteLen = raf.length(); 
     if (byteLen % Main.dataLength != 0) {
       throw new IllegalArgumentException();
@@ -40,6 +43,7 @@ public class FileStorage implements Storage {
    */
   public FileStorage(String fileName0, long numLen0) throws IOException {
     fileName = fileName0;
+    readOnly = false;
     raf = new RandomAccessFile(fileName, "rw");
     long byteLen = numLen0 << Main.log2DataLength;
     raf.setLength(byteLen);
@@ -68,6 +72,9 @@ public class FileStorage implements Storage {
 
   @Override
   public WriteProvider createWriteProvider(long start, long len, int bufSize) throws IOException {
+    if (readOnly) {
+      throw new IllegalStateException("The storage is open in read only mode.");
+    }
     assert start >= 0;
     assert len > 0;
     assert bufSize > 0;

@@ -429,9 +429,17 @@ public class TaskPlannerImpl implements TaskPlanner {
     File z = new File(zFileName);
     if (isDestinationZFile()) {
       File original = new File(fileName);
+      if (!original.exists()) {
+        throw new IOException("Cannot find original file ["+original.getAbsolutePath()+"].");
+      }
+      // delete original:
       original.delete();
       if (original.exists()) {
         throw new IOException("Cannot remove original file ["+original.getAbsolutePath()+"]. The sorting result is in file ["+z.getAbsolutePath()+"].");
+      }
+      // move temp to original:
+      if (!z.exists()) {
+        throw new IOException("Cannot find temp file ["+z.getAbsolutePath()+"].");
       }
       z.renameTo(original);
       if (!original.exists()) {
@@ -440,6 +448,7 @@ public class TaskPlannerImpl implements TaskPlanner {
         if (Main.debug) { out.println("Successfully moved z-file to original name."); }
       }
     } else {
+      // remove temp:
       if (z.exists()) {
         z.delete();
       }

@@ -32,13 +32,8 @@ public class RadixPlannerImpl implements TaskPlanner {
   // max total number of ints we can allocate using mapped or direct buffers:
   private final long allocatableTotalNumbersMemory;
 
-  private final DivisionResult allocMemoryPerThread;
   private LargeFirstDivisionResultIterator allocMemoryIterator;
-  
-  private final DivisionResult numbersPerThread;
   private final LargeFirstDivisionResultIterator numberRangeIterator;
-  
-  private final DivisionResult digitValuesPerThread;
   private final LargeFirstDivisionResultIterator digitValuesRangeIterator;   
   
   // dynamic sorting cascade variables:
@@ -49,7 +44,7 @@ public class RadixPlannerImpl implements TaskPlanner {
   private long countingTasksSubmitted = 0;
   private long countingTasksDone = 0;
   
-  int digitNumber = 0; // serves as sorting cascade index
+  int digitNumber; // serves as sorting cascade index
   private long allocResource; // the total allocatable memory resource counter
 
   // locks:
@@ -66,26 +61,29 @@ public class RadixPlannerImpl implements TaskPlanner {
     fileName = fileName0;
     zFileName = fileName + ".z";
     
-    allocMemoryPerThread = Util.divideByApproximatelyEqualParts(allocatableTotalNumbersMemory, threads);
-    allocMemoryIterator = new LargeFirstDivisionResultIterator(allocMemoryPerThread);
+    DivisionResult allocMemoryPerThread = Util.divideByApproximatelyEqualParts(allocatableTotalNumbersMemory, threads);
     assert (allocMemoryPerThread.totalParts() == threads);
     assert (allocMemoryPerThread.totalLength() == allocatableTotalNumbersMemory);
+    allocMemoryIterator = new LargeFirstDivisionResultIterator(allocMemoryPerThread);
     
-    numbersPerThread = Util.divideByApproximatelyEqualParts(totalNumbers, threads);
+    DivisionResult numbersPerThread = Util.divideByApproximatelyEqualParts(totalNumbers, threads);
+    assert (numbersPerThread.totalParts() == threads);
+    assert (numbersPerThread.totalLength() == totalNumbers);
     numberRangeIterator = new LargeFirstDivisionResultIterator(numbersPerThread);
-    assert (numbersPerThread.totalParts() == threads);
-    assert (numbersPerThread.totalLength() == totalNumbers);
     
-    digitValuesPerThread = Util.divideByApproximatelyEqualParts(RadixSort.numDigitValues, threads);
+    DivisionResult digitValuesPerThread = Util.divideByApproximatelyEqualParts(RadixSort.numDigitValues, threads);
+    assert (digitValuesPerThread.totalParts() == threads);
+    assert (digitValuesPerThread.totalLength() == RadixSort.numDigitValues);
     digitValuesRangeIterator = new LargeFirstDivisionResultIterator(digitValuesPerThread);
-    assert (numbersPerThread.totalParts() == threads);
-    assert (numbersPerThread.totalLength() == totalNumbers);
 
-    mainStorage = new FileStorage(fileName);
+    mainStorage = new FileStorage(fileName, false);
     assert (mainStorage.length() == totalNumbers);
     tmpStorage = new FileStorage(zFileName, totalNumbers);
+    assert (tmpStorage.length() == totalNumbers);
     
     allocResource = allocatableTotalNumbersMemory; // set total
+    digitNumber = 0;
+    radixConcurrentImpl = new RadixConcurrentImpl(mainStorage, tmpStorage, digitNumber);
    
     if (Main.debug) { 
       out.println("========================== Planner created with:");
@@ -104,9 +102,10 @@ public class RadixPlannerImpl implements TaskPlanner {
         // 1. counting tasks:
         final Range numberRange = numberRangeIterator.next();
         if (numberRange != null) {
+          assert (sortingTasksSubmitted == 0);
           // compose and submit a new counting task:
           Range alloc = allocMemoryIterator.next();
-          assert (alloc != null); // memory is divided by "threads" as well as entire the number range.
+          assert (alloc != null); // NB: memory is divided by "threads" as well as entire the number range.
           checkAlloc(alloc.length);
           allocResource -= alloc.length;
           assert (allocResource >= 0);
@@ -120,11 +119,10 @@ public class RadixPlannerImpl implements TaskPlanner {
           condition.await();
         }
         assert (countingTasksDone == countingTasksSubmitted);
-        assert (sortingTasksSubmitted == 0);
-        assert (allocResource == allocatableTotalNumbersMemory); // all the memory is freed
         
-        final long writeProvidersBuf = ((writeBuffersRatio - 1) * allocResource)/writeBuffersRatio;
         if (!integrated) {
+          assert (allocResource == allocatableTotalNumbersMemory); // all the memory is returned
+          final long writeProvidersBuf = ((writeBuffersRatio - 1) * allocResource)/writeBuffersRatio;
           // 2. Integrate the Radix. Do not submit special task for that since this is very fast:
           radixConcurrentImpl.integrate(writeProvidersBuf);
           integrated = true;
@@ -156,7 +154,8 @@ public class RadixPlannerImpl implements TaskPlanner {
 
         // 4. finish processing of this digit:
         radixConcurrentImpl.finish(); // write buffers are freed there.
-        allocResource += writeProvidersBuf;
+        allocResource += radixConcurrentImpl.getTotalWriteProvidersBuffersLength();
+        radixConcurrentImpl = null;
         assert (allocResource == allocatableTotalNumbersMemory);
         
         // next digit:
@@ -190,6 +189,7 @@ public class RadixPlannerImpl implements TaskPlanner {
     
     digitValuesRangeIterator.reset();
     //allocMemoryIterator.reset();
+    assert (allocResource == allocatableTotalNumbersMemory);
     allocMemoryIterator = new LargeFirstDivisionResultIterator(Util.divideByApproximatelyEqualParts(allocResource, threads));
     numberRangeIterator.reset();
     // re-create radix impl for next digit:
@@ -225,7 +225,7 @@ public class RadixPlannerImpl implements TaskPlanner {
     private final RadixConcurrentImpl radixSort;
     private final long buf;
     public SortingTask(int id0, Resource r0, int digit0, Range digitValueRange0, RadixConcurrentImpl rs0) {
-      super(id0, r0, false);
+      super(id0, r0, true);
       digit = digit0;
       digitValueRange = digitValueRange0; 
       radixSort = rs0;

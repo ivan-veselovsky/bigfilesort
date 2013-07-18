@@ -10,7 +10,8 @@ public class RadixConcurrentImpl {
   private Storage srcStorage;
   private Storage destinationStorage;
   private final int digitNumber;
-  private ForwardDistribution distribution; 
+  private ForwardDistribution distribution;
+  private long totalWriteProvidersBuffersLength;
   
   // diagnostic/debug:
   private final AtomicBoolean integrated = new AtomicBoolean(false);
@@ -56,7 +57,7 @@ public class RadixConcurrentImpl {
   /**
    * This method must be called once, after all {@link #count(Range, long)} calls are finished.
    */
-  public void integrate(long totalWriteProvidersBuf) throws IOException {
+  public void integrate(final long totalWriteProvidersBuf) throws IOException {
     if (!integrated.compareAndSet(false, true)) {
       throw new IllegalStateException("must be integrated only once.");
     }
@@ -65,7 +66,12 @@ public class RadixConcurrentImpl {
 
     // prepare for the data moving:
     distribution.createWriteProviders(totalWriteProvidersBuf); // create write providers according to the regions 
-    distribution.disposeCounters(); // counters are not needed any more 
+    distribution.disposeCounters(); // counters are not needed any more
+    totalWriteProvidersBuffersLength = totalWriteProvidersBuf;
+  }
+  
+  public long getTotalWriteProvidersBuffersLength() {
+    return totalWriteProvidersBuffersLength;
   }
 
   /**

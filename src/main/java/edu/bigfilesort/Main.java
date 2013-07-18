@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import edu.bigfilesort.parallel.Exec;
 import edu.bigfilesort.parallel.TaskPlanner;
 import edu.bigfilesort.parallel.TaskPlannerImpl;
+import edu.bigfilesort.radix.RadixPlannerImpl;
 
 public class Main {
 
@@ -34,6 +35,8 @@ public class Main {
    public static final boolean debug = false; // diagnostic output
 
    public static final boolean countersEnabled = false; // counters in sort algorithms
+   
+   private boolean radix = true; // use radix parallel implementation  
 
    /*
     * On Windows-32 Mapped providers perform much slower (~3 times) than Direct (don't know why).
@@ -74,8 +77,12 @@ public class Main {
       return result;
    }
 
-   private long intsToMegabytes(long ints/*4-byte numbers*/) {
-     return (ints << log2DataLength) / megaByte;
+   public static long megabytesToInts(long mb) {
+     return mb << (20 - log2DataLength);
+   }
+   
+   public static long intsToMegabytes(long ints/*4-byte numbers*/) {
+     return ints >> (20 - log2DataLength);
    }
    
    private int setParameters(String[] args) throws Exception {
@@ -122,7 +129,7 @@ public class Main {
           out.println("Max native alloc must be positive. (" + mb + " specified.)");
           return 3;
         }
-        maxAllocNumbers = (megaByte * mb) >> log2DataLength;
+        maxAllocNumbers = megabytesToInts(mb);
         out.println("Max alloc native (Mb): " + intsToMegabytes(maxAllocNumbers) );
       } else {
         out.println("Max alloc native (Mb): " + intsToMegabytes(maxAllocNumbers) + " (default).");
@@ -145,16 +152,16 @@ public class Main {
    }
 
    private int runImpl() throws Exception {
-      // =====================================
-      // new parallel impl:
-      
       final long numLength = (fileLength >> log2DataLength);
-      TaskPlanner planner = new TaskPlannerImpl(threadCount, numLength, maxAllocNumbers, fileName);
+      final TaskPlanner planner;
+      if (radix) {
+        planner = new RadixPlannerImpl(threadCount, numLength, maxAllocNumbers, fileName);
+      } else {
+        planner = new TaskPlannerImpl(threadCount, numLength, maxAllocNumbers, fileName);
+      }
       Exec exec = new Exec();
       exec.executeWithPalnner(threadCount, 120, TimeUnit.MINUTES, planner);
       planner.finish();
-      
-      // =====================================
       return 0;
    }
 
