@@ -9,6 +9,10 @@ import java.nio.channels.FileChannel.MapMode;
 import java.util.Random;
 
 import edu.bigfilesort.Util.DivisionResult;
+import edu.bigfilesort.radix.FileStorage;
+import edu.bigfilesort.radix.Storage;
+import edu.bigfilesort.util.Checksum;
+import edu.bigfilesort.util.ChecksumReaderWriter;
 
 public class WriteDataMain {
 
@@ -152,6 +156,13 @@ public class WriteDataMain {
       fc.close();
       raf.close();
     }
+    
+    System.out.println("Writing checksum...");
+    Storage storage = new FileStorage(name, true); 
+    Checksum sum = Checksum.calculateChecksum(storage, Util.toIntNoTruncation(bufferSize >> Main.log2DataLength));
+    storage.close();
+    ChecksumReaderWriter crw = new ChecksumReaderWriter(name + ".checksum");
+    crw.writeChecksum(sum, name);
   }
   
   private DataProvider getDataProvider(String modeStr) {

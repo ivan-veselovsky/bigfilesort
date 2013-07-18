@@ -2,10 +2,16 @@ package edu.bigfilesort;
 
 import static java.lang.System.out;
 
+import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
+
+import edu.bigfilesort.radix.FileStorage;
+import edu.bigfilesort.radix.Storage;
+import edu.bigfilesort.util.Checksum;
+import edu.bigfilesort.util.ChecksumReaderWriter;
 import static edu.bigfilesort.WriteDataMain.bufferSize;
 
 public class CheckSortedMain {
@@ -102,6 +108,23 @@ public class CheckSortedMain {
     } finally {
       fc.close();
       raf.close();
+    }
+    
+    // verify checksum
+    final File checksumFile = new File(name + ".checksum");
+    if (checksumFile.exists()) {
+      System.out.println("Verifying checksum...");
+      Storage storage = new FileStorage(name, true); 
+      Checksum actualSum = Checksum.calculateChecksum(storage, Util.toIntNoTruncation(bufferSize >> Main.log2DataLength));
+      storage.close();
+      
+      ChecksumReaderWriter crw = new ChecksumReaderWriter(name + ".checksum");
+      Checksum expectedSum = crw.readChecksum();
+      if (expectedSum.equals(actualSum)) {
+        System.out.println("Checksum ok.");
+      } else {
+        throw new RuntimeException("Checksum verification failed. Expected {"+expectedSum+"}, but found {"+actualSum+"}.");
+      }
     }
   }
   

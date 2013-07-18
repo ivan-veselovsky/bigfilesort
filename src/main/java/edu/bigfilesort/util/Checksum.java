@@ -7,11 +7,11 @@ import edu.bigfilesort.radix.Storage;
 
 public class Checksum {
 
-  private final long length;
-  private final int xor;
-  private final int sum;
+  public final long length;
+  public final int xor;
+  public final int sum;
   
-  private Checksum(long length0, int xor0, int sum0) {
+  Checksum(long length0, int xor0, int sum0) {
     length = length0;
     xor = xor0;
     sum = sum0;
@@ -47,6 +47,7 @@ public class Checksum {
     return new Checksum(l, xor, sum);
   }
   
+  @Override
   public boolean equals(Object o) {
     if (o instanceof Checksum) {
       Checksum other = (Checksum)o;

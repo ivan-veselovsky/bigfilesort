@@ -73,7 +73,9 @@ public class Main {
       final long t = System.currentTimeMillis();
       int result = runImpl();
       long delta = System.currentTimeMillis() - t;
-      if (debug) { out.println("Sorting took: " + delta + " ms"); }
+      //if (debug) { 
+      out.println("============= Sorting took: " + delta + " ms"); 
+      //}
       return result;
    }
 
