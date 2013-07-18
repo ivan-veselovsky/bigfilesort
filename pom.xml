@@ -36,6 +36,20 @@
           </archive>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <forkMode>once</forkMode>
+          <!-- NB: the engine works with Xms=Xmx==(8+t)m, but here 
+               we set larger value because some tests work with large arrays: -->
+          <argLine>-Xms512m -Xmx512m -XX:MaxDirectMemorySize=1024m</argLine>
+          <enableAssertions>true</enableAssertions>
+          <printSummary>true</printSummary>
+          <!-- NB: may be changed to 'true' to suppress console output: -->
+          <redirectTestOutputToFile>true</redirectTestOutputToFile>
+        </configuration> 
+      </plugin>
     </plugins>
   </build>
 
