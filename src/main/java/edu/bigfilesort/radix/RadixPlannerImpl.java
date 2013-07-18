@@ -19,6 +19,11 @@ import edu.bigfilesort.util.Range;
 
 public class RadixPlannerImpl implements TaskPlanner {
   
+  /*
+   * See edu.bigfilesort.radix.RadixSort.writeBuffersRatio.
+   * This constant has the same meaning.
+   * Value of 8 is empirically found to be near-optimal.
+   */
   private static final int writeBuffersRatio = 8;
   
   private final int threads;
@@ -32,7 +37,7 @@ public class RadixPlannerImpl implements TaskPlanner {
   // max total number of ints we can allocate using mapped or direct buffers:
   private final long allocatableTotalNumbersMemory;
 
-  private LargeFirstDivisionResultIterator allocMemoryIterator;
+  private LargeFirstDivisionResultIterator allocMemoryIterator; // it is re-created, so not final
   private final LargeFirstDivisionResultIterator numberRangeIterator;
   private final LargeFirstDivisionResultIterator digitValuesRangeIterator;   
   

@@ -85,8 +85,8 @@ public class TestRadixFile {
   @Test
   // -XX:MaxDirectMemorySize=1024m
   public void testRadixSortBig() throws Exception {
-    final long numLength = 1024L * 1024L * 256; // 128 is ok for test
-    final long bufLen    = 1024L * 1024L * 64; // 128 is default
+    final long numLength = 1024L * 1024L * 32; // 128 is ok for test
+    final long bufLen    = 1024L * 1024L * 16; // 128 is default
     testImpl(numLength, bufLen);
   }
   

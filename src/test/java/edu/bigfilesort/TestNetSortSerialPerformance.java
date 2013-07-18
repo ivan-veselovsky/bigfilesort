@@ -11,18 +11,22 @@ public class TestNetSortSerialPerformance {
 
   /**
    * Check aggregSort() with non-zero starting offset.
+   * 
+   * XXX: net sort read/write providers are implemented very not efficiently
+   * because they read numbers with small buffers, and the buffers are re-positioned
+   * to read each number. 
    */
   @Test
   public void testSorting1M() throws Exception {
-    final long numLength = 1 * 1024 * 1024 / Main.dataLength;
+    // NB: size is reduced to make the test faster 
+    final long numLength = 1L * 1024 * 128 / Main.dataLength; //1L * 1024 * 1024 / Main.dataLength;
     final String file = "test-sort-1m.data";
     
     WriteDataMain writeDataMain = new WriteDataMain();
-    assertEquals(0, writeDataMain.mainImpl(file, "" + (Main.dataLength * numLength), 
-        WriteDataMain.Mode.desc.toString()
-        //WriteDataMain.Mode.rand.toString()
+    assertEquals(0, writeDataMain.mainImpl(file, Long.toString(Main.dataLength * numLength), 
+        //WriteDataMain.Mode.desc.toString()
+        WriteDataMain.Mode.rand.toString()
         ));
-    
     
     long t = System.currentTimeMillis();
     // sort:

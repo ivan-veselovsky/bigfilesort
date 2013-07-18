@@ -2,6 +2,7 @@ package edu.bigfilesort;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 
@@ -31,9 +32,16 @@ public class TestBufferedMerger {
     mergeImpl(4, srcFile, dstFile, 0, numLength/2, numLength/2);
     
     // check sorting:
+    moveSrcChecksumToDst(srcFile, dstFile);
     assertEquals(0, CheckSortedMain.mainImpl(dstFile));
   }
 
+  private void moveSrcChecksumToDst(String srcFile, String dstFile) {
+    File dstF = new File(dstFile+".checksum");
+    dstF.delete();
+    new File(srcFile+".checksum").renameTo(dstF);
+  } 
+  
   @Test
   public void testMerge32() throws Exception {
     final long numLength = 32;
@@ -53,10 +61,11 @@ public class TestBufferedMerger {
         WriteDataMain.Mode.desc.toString()
         ));
 
-   mergeImpl(5, srcFile, dstFile, 0, numLength/2, numLength/2);
+     mergeImpl(5, srcFile, dstFile, 0, numLength/2, numLength/2);
     
-    // check sorting:
-    assertEquals(0, CheckSortedMain.mainImpl(dstFile));
+     // check sorting:
+     moveSrcChecksumToDst(srcFile, dstFile);
+     assertEquals(0, CheckSortedMain.mainImpl(dstFile));
   }
 
   @Test
@@ -78,9 +87,10 @@ public class TestBufferedMerger {
         WriteDataMain.Mode.desc.toString()
         ));
 
-   mergeImpl(17, srcFile, dstFile, 0, numLength/2, numLength/2);
+    mergeImpl(17, srcFile, dstFile, 0, numLength/2, numLength/2);
     
     // check sorting:
+    moveSrcChecksumToDst(srcFile, dstFile);
     assertEquals(0, CheckSortedMain.mainImpl(dstFile));
   }
   
@@ -92,25 +102,10 @@ public class TestBufferedMerger {
     final String srcFile = "test-merge-"+numLength+"-src.data";
     final String dstFile = "test-merge-"+numLength+"-dst.data";
 
-    // XXX temp
-//    // write:
-//    DataProvider provider = new MergeTestDataProvider((int)numLength, Integer.MIN_VALUE, 2, 1);
-//    WriteDataMain writeDataMain = new WriteDataMain();
-//    writeDataMain.setProvider(provider);
-//    long flen = numLength * Main.dataLength;
-//    assertEquals(0, writeDataMain.mainImpl(srcFile, Long.toString(flen), 
-//        null //WriteDataMain.Mode.asc.toString()
-//        //WriteDataMain.Mode.rand.toString()
-//        ));
-//    writeDataMain = new WriteDataMain();
-//    assertEquals(0, writeDataMain.mainImpl(dstFile, Long.toString(Main.dataLength * numLength), 
-//        //WriteDataMain.Mode.desc.toString()
-//        WriteDataMain.Mode.desc.toString()
-//        ));
-
-   mergeImpl(sumBuffersSize, srcFile, dstFile, 0, numLength/2, numLength/2);
+    mergeImpl(sumBuffersSize, srcFile, dstFile, 0, numLength/2, numLength/2);
     
     // check sorting:
+    moveSrcChecksumToDst(srcFile, dstFile);
     assertEquals(0, CheckSortedMain.mainImpl(dstFile));
   }
   

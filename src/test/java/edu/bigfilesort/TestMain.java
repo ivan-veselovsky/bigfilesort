@@ -20,10 +20,6 @@ public class TestMain {
     assertEquals(0, writeDataMain.mainImpl(file, Long.toString(Main.dataLength * numLength), 
         WriteDataMain.Mode.rand.toString()
         ));
-    Storage srcStorage = new FileStorage(file, true);
-    final Checksum sum0 = Checksum.calculateChecksum(srcStorage, (int)((maxAllocBytes >> Main.log2DataLength)/2));
-    srcStorage.close();
-    System.out.println("Checksum0: " + sum0);
     
     final long t0 = System.currentTimeMillis();
     
@@ -34,22 +30,16 @@ public class TestMain {
     System.out.println("=================================== Sorting took " + delta0 + " ms.");
     
     assertEquals(0, CheckSortedMain.mainImpl(file));
-    
-    srcStorage = new FileStorage(file, true);
-    final Checksum sum1 = Checksum.calculateChecksum(srcStorage, (int)((maxAllocBytes >> Main.log2DataLength)/2));
-    srcStorage.close();
-    System.out.println("Checksum1: " + sum1);
-    assertEquals(sum0, sum1);
   }
   
   @Test
   public void testPieceMemorySortingMultithread() throws Exception {
-    final long numLength = 1024L * 1024L * 256; //64; //1027; // 256 : 1G
-    final long maxAllocBytes = 1024L * 1024 * 256;//128; // 128m = default
-    // non-radix impl:
+    final long numLength = 1024L * 1024L * 64;//256; //64; //1027; // 256 : 1G
+    final long maxAllocBytes = 1024L * 1024 * 16;//128;//128; // 128m = default
+    // non-radix (old) impl:
     // XXX does not work with 1 thread . Sorting violation.
     // XXX does not work for 3 threads if the file is small (~3Mb)
-    final int threads = 2; // 5
+    final int threads = 4;
     testImpl(numLength, maxAllocBytes, threads);
   }
 }
