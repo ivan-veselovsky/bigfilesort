@@ -4,8 +4,11 @@ import java.io.IOException;
 
 public class TestConcurrentImplBasedRadixSortFile extends TestRadixFile {
 
+  private final int threads = 4;
+  
+  @Override
   protected void sortImpl(Storage mainStorage, Storage tmpStorage, long bufLen) throws IOException {
-    final ConcurrentImplBasedRadixSort radix = new ConcurrentImplBasedRadixSort(mainStorage, tmpStorage, 2);
+    final ConcurrentImplBasedRadixSort radix = new ConcurrentImplBasedRadixSort(mainStorage, tmpStorage, threads);
     radix.sort(bufLen);
   }
   

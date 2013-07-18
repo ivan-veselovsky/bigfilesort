@@ -36,24 +36,21 @@ public class TestRadixFile {
     // write:
     WriteDataMain writeDataMain = new WriteDataMain();
     assertEquals(0, writeDataMain.mainImpl(srcFile, Long.toString(Main.dataLength * numLength), 
-        //WriteDataMain.Mode.desc.toString()
         WriteDataMain.Mode.rand.toString()
         ));
-//    writeDataMain = new WriteDataMain();
-//    assertEquals(0, writeDataMain.mainImpl(tmpFile, Long.toString(Main.dataLength * numLength), 
-//        //WriteDataMain.Mode.desc.toString()
-//        WriteDataMain.Mode.desc.toString()
-//        ));
     
     final Storage mainStorage = new FileStorage(srcFile, false);
     final Storage tmpStorage = new FileStorage(tmpFile, mainStorage.length());
     final Checksum sum0 = Checksum.calculateChecksum(mainStorage, (int)(bufLen/2));
     System.out.println("Checksum0: " + sum0);
+    final long t0 = System.currentTimeMillis();
     
     sortImpl(mainStorage, tmpStorage, bufLen);
     
     mainStorage.close();
     tmpStorage.close();
+    final long t1 = System.currentTimeMillis() - t0;
+    System.out.println("Sorting took "+ t1 + " ms");
     
     new File(tmpFile).delete();
     
@@ -88,8 +85,8 @@ public class TestRadixFile {
   @Test
   // -XX:MaxDirectMemorySize=1024m
   public void testRadixSortBig() throws Exception {
-    final long numLength = 1024L * 1024L * 128; //379; // 256; // 1.48G, movie
-    final long bufLen    = 1024L * 1024L * 128; //192; // 800m // 200: ok with MDMS=1024m
+    final long numLength = 1024L * 1024L * 256; // 128 is ok for test
+    final long bufLen    = 1024L * 1024L * 64; // 128 is default
     testImpl(numLength, bufLen);
   }
   

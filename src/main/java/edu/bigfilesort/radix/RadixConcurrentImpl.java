@@ -26,7 +26,7 @@ public class RadixConcurrentImpl {
       srcStorage = tmpStorage0; 
       destinationStorage = mainStorage0;
     }
-    distribution = new ForwardDistribution(digitNumber, destinationStorage); //was: 1/2
+    distribution = new ForwardDistribution(digitNumber, destinationStorage);
   }
 
   /**

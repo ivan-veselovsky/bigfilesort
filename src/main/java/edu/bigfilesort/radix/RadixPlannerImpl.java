@@ -19,7 +19,7 @@ import edu.bigfilesort.util.Range;
 
 public class RadixPlannerImpl implements TaskPlanner {
   
-  private static final int writeBuffersRatio = 2;  
+  private static final int writeBuffersRatio = 8;
   
   private final int threads;
   private final long totalNumbers; // full size of the initial array to be sorted, in numbers.

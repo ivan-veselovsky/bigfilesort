@@ -3,7 +3,6 @@ package edu.bigfilesort.radix;
 import java.io.IOException;
 
 import edu.bigfilesort.Util;
-import edu.bigfilesort.Util.DivisionResult;
 import edu.bigfilesort.util.LargeFirstDivisionResultIterator;
 import edu.bigfilesort.util.Range;
 
@@ -58,12 +57,13 @@ public class ConcurrentImplBasedRadixSort {
       
       digitIt.reset();
       Range digitRange;
+      final int readBufferPerThread = Util.toIntNoTruncation(totalBuf/(writeBuffersRatio*threads));
       while (true) {
         digitRange = digitIt.next();
         if (digitRange == null) {
           break;
         }
-        radixConcurrentImpl.moveForFilteredDigitValueRange(digitRange, Util.toIntNoTruncation(totalBuf/(writeBuffersRatio*threads)));
+        radixConcurrentImpl.moveForFilteredDigitValueRange(digitRange, readBufferPerThread);
       }
       
       radixConcurrentImpl.finish();
