@@ -2,10 +2,6 @@ package edu.bigfilesort;
 
 import org.junit.Test;
 
-import edu.bigfilesort.radix.FileStorage;
-import edu.bigfilesort.radix.Storage;
-import edu.bigfilesort.util.Checksum;
-
 import static org.junit.Assert.*;
 
 public class TestMain {
@@ -31,15 +27,26 @@ public class TestMain {
     
     assertEquals(0, CheckSortedMain.mainImpl(file));
   }
+
+  
+  private static final long numLength = 1024L * 1024L * 64;//256; //64; //1027; // 256 : 1G
+  private static final long maxAllocBytes = 1024L * 1024 * 16;//128;//128; // 128m = default
   
   @Test
-  public void testPieceMemorySortingMultithread() throws Exception {
-    final long numLength = 1024L * 1024L * 64;//256; //64; //1027; // 256 : 1G
-    final long maxAllocBytes = 1024L * 1024 * 16;//128;//128; // 128m = default
+  public void test_1thread() throws Exception {
     // non-radix (old) impl:
     // XXX does not work with 1 thread . Sorting violation.
     // XXX does not work for 3 threads if the file is small (~3Mb)
-    final int threads = 4;
+    final int threads = 1;
+    testImpl(numLength, maxAllocBytes, threads);
+  }
+  
+  @Test
+  public void test_5threads() throws Exception {
+    // non-radix (old) impl:
+    // XXX does not work with 1 thread . Sorting violation.
+    // XXX does not work for 3 threads if the file is small (~3Mb)
+    final int threads = 5;
     testImpl(numLength, maxAllocBytes, threads);
   }
 }

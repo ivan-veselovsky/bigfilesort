@@ -61,10 +61,10 @@ public class RadixSort {
         destinationStorage = mainStorage;
       }
 
-      distribution = new ForwardDistribution(d, destinationStorage); //was: 1/2
+      distribution = new ForwardDistribution(d, true); 
       // here we use all the available buffer space since no writing is performed yet:
       // XXX: yes, can use total buf space, but Windows does not allow to alloc one continuous piece, so /2 it:
-      readProvider = srcStorage.createReadProvider(0, numLength, Util.toIntNoTruncation(totalBuf/2) );
+      readProvider = srcStorage.createReadProvider(0, numLength, Util.toIntNoTruncation(totalBuf) );
       assert (readProvider.length() == numLength);
       fill(distribution, readProvider); // fills the distribution (counters) 
       distribution.integrate(); // integrate the distribution
@@ -73,7 +73,7 @@ public class RadixSort {
       
       readProvider.dispose();
       long writeTotalBuf = ((writeBuffersRatio - 1) * totalBuf)/writeBuffersRatio;
-      distribution.createWriteProviders(writeTotalBuf); // create write providers according to the regions 
+      distribution.createWriteProviders(destinationStorage, writeTotalBuf); // create write providers according to the regions 
       
       distribution.disposeCounters(); // counters are not needed any more 
       

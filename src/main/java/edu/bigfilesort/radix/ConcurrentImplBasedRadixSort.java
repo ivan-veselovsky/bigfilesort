@@ -32,28 +32,36 @@ public class ConcurrentImplBasedRadixSort {
    * Main logic described here.
    */
   public void sort(long totalBuf) throws IOException {
-    RadixConcurrentImpl radixConcurrentImpl;
+    boolean atomicCounters = (threads > 1); 
+    final RadixConcurrentImpl radixConcurrentImpl = new RadixConcurrentImpl(mainStorage, tmpStorage, atomicCounters);
     final LargeFirstDivisionResultIterator digitIt = new LargeFirstDivisionResultIterator(Util.divideByApproximatelyEqualParts(numDigitValues, threads));
+    
+    final long t = System.currentTimeMillis();
+    // 1.
+    LargeFirstDivisionResultIterator numberRangeIterator = new LargeFirstDivisionResultIterator(
+        Util.divideByApproximatelyEqualParts(numLength, threads));
+    Range numberRange;  
+    while (true) {
+      numberRange = numberRangeIterator.next();
+      if (numberRange == null) {
+        break;
+      }
+      radixConcurrentImpl.count(numberRange, totalBuf);
+    }
+
+    // 2.
+    radixConcurrentImpl.integrateAllDigits();
+    System.out.println("Counting finished: " + (System.currentTimeMillis() - t)/1000 + " sec");
+    
     for (int d=0; d<numberOfDigits; d++) {
       System.out.println("=========================== digit #" + d);
-      final long t = System.currentTimeMillis();
+      final long tt = System.currentTimeMillis();
       // NB: impl is created for each digit:
-      radixConcurrentImpl = new RadixConcurrentImpl(mainStorage, tmpStorage, d); 
-
-      LargeFirstDivisionResultIterator numberRangeIterator = new LargeFirstDivisionResultIterator(
-          Util.divideByApproximatelyEqualParts(numLength, threads));
-      Range numberRange;  
-      while (true) {
-        numberRange = numberRangeIterator.next();
-        if (numberRange == null) {
-          break;
-        }
-        radixConcurrentImpl.count(numberRange, totalBuf/2);
-      }
+      //radixConcurrentImpl = new RadixConcurrentImpl(mainStorage, tmpStorage, d); 
       
       long writeTotalBuf = ((writeBuffersRatio - 1) * totalBuf)/writeBuffersRatio;
-      radixConcurrentImpl.integrate(writeTotalBuf);
-      System.out.println("Counting finished: " + (System.currentTimeMillis() - t)/1000 + " sec");
+      //radixConcurrentImpl.integrate(writeTotalBuf);
+      radixConcurrentImpl.startDigit(d, writeTotalBuf);
       
       digitIt.reset();
       Range digitRange;
@@ -63,14 +71,16 @@ public class ConcurrentImplBasedRadixSort {
         if (digitRange == null) {
           break;
         }
-        radixConcurrentImpl.moveForFilteredDigitValueRange(digitRange, readBufferPerThread);
+        radixConcurrentImpl.moveForFilteredDigitValueRange(d, digitRange, readBufferPerThread);
       }
       
-      radixConcurrentImpl.finish();
+      radixConcurrentImpl.finishDigit(d);
       
-      long delta = System.currentTimeMillis() - t;
+      long delta = System.currentTimeMillis() - tt;
       System.out.println("=========================== digit #" + d + " finished. Took " + delta/1000 + " sec");
-    }
+    } // for digit
+    
+    radixConcurrentImpl.finish();
   }
   
 }

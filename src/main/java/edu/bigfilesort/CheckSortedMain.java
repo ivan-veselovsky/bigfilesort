@@ -12,7 +12,7 @@ import edu.bigfilesort.radix.FileStorage;
 import edu.bigfilesort.radix.Storage;
 import edu.bigfilesort.util.Checksum;
 import edu.bigfilesort.util.ChecksumReaderWriter;
-import static edu.bigfilesort.WriteDataMain.bufferSize;
+import static edu.bigfilesort.WriteDataMain.bufferSizeBytes;
 
 public class CheckSortedMain {
   
@@ -31,7 +31,7 @@ public class CheckSortedMain {
     }
     String fileName = args[0];
     
-    if ((bufferSize % Main.dataLength) != 0L) {
+    if ((bufferSizeBytes % Main.dataLength) != 0L) {
       throw new IllegalStateException("Buffer size must be multiple of "+Main.dataLength+".");
     }
     
@@ -59,15 +59,15 @@ public class CheckSortedMain {
     	throw new IllegalArgumentException("File length ("+fileLength+") must be multiple of " + Main.dataLength);
     }
     
-    long numWrites = fileLength / bufferSize;
-    long remainderLength =  fileLength % bufferSize;
+    long numWrites = fileLength / bufferSizeBytes;
+    long remainderLength =  fileLength % bufferSizeBytes;
     if (remainderLength > 0) {
       numWrites++;
     }
     if (remainderLength > 0) {
-      assert ((numWrites - 1) * bufferSize + remainderLength == fileLength);
+      assert ((numWrites - 1) * bufferSizeBytes + remainderLength == fileLength);
     } else {
-      assert (numWrites * bufferSize + remainderLength == fileLength);
+      assert (numWrites * bufferSizeBytes + remainderLength == fileLength);
     }
     
     fc.position(0);
@@ -77,9 +77,9 @@ public class CheckSortedMain {
       MappedByteBuffer mbb;
       int leader = Integer.MIN_VALUE;
       for (int i=0; i<numWrites; i++) {
-        position = i * bufferSize;
+        position = i * bufferSizeBytes;
         len = (remainderLength > 0 
-            && i == numWrites - 1) ? remainderLength : bufferSize;
+            && i == numWrites - 1) ? remainderLength : bufferSizeBytes;
         
         assert (len % Main.dataLength == 0);
         
@@ -114,9 +114,12 @@ public class CheckSortedMain {
     final File checksumFile = new File(name + ".checksum");
     if (checksumFile.exists()) {
       System.out.println("Verifying checksum...");
+      long t = System.currentTimeMillis();
       Storage storage = new FileStorage(name, true); 
-      Checksum actualSum = Checksum.calculateChecksum(storage, Util.toIntNoTruncation(bufferSize >> Main.log2DataLength));
+      Checksum actualSum = Checksum.calculateChecksum(storage, Util.toIntNoTruncation(bufferSizeBytes >> Main.log2DataLength));
       storage.close();
+      long delta = System.currentTimeMillis() - t;
+      System.out.println("Checksum calculated in "+delta+" ms.");
       
       ChecksumReaderWriter crw = new ChecksumReaderWriter(name + ".checksum");
       Checksum expectedSum = crw.readChecksum();

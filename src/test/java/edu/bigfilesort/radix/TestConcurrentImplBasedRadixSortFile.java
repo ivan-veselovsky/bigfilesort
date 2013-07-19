@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public class TestConcurrentImplBasedRadixSortFile extends TestRadixFile {
 
-  private final int threads = 4;
+  private final int threads = 5;
   
   @Override
   protected void sortImpl(Storage mainStorage, Storage tmpStorage, long bufLen) throws IOException {

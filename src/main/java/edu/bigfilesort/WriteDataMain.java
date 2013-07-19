@@ -20,7 +20,7 @@ public class WriteDataMain {
    * Size (in bytes) of the read or write buffer that
    * is directly mapped to memory.
    */
-  static final long bufferSize = 1024L * 1024L * 64; 
+  static final long bufferSizeBytes = 1024L * 1024L * 64; // 64m by default 
   
   private DataProvider dataProvider; 
   
@@ -94,7 +94,7 @@ public class WriteDataMain {
     
     final String modeStr = args[2];
     
-    if (bufferSize % Main.dataLength != 0) {
+    if (bufferSizeBytes % Main.dataLength != 0) {
       throw new IllegalStateException("Buffer size must be multiple of "+Main.dataLength+".");
     }
     
@@ -112,7 +112,7 @@ public class WriteDataMain {
   }
   
   void writeImpl(final String name, final long fileLength, final String modeStr) throws Exception {
-    DivisionResult div = Util.divideNotLonger(fileLength, bufferSize);
+    DivisionResult div = Util.divideNotLonger(fileLength, bufferSizeBytes);
     final long numWrites = div.totalParts();
     final long remainderLength = div.smallerPartLength; 
     
@@ -126,9 +126,9 @@ public class WriteDataMain {
       long position, len;
       long writtenCount = 0;
       for (int i=0; i<numWrites; i++) {
-        position = i * bufferSize;
+        position = i * bufferSizeBytes;
         len = (remainderLength > 0 
-                  && i == numWrites - 1) ? remainderLength : bufferSize;
+                  && i == numWrites - 1) ? remainderLength : bufferSizeBytes;
         
         assert (len % Main.dataLength == 0);
         
@@ -158,11 +158,14 @@ public class WriteDataMain {
     }
     
     System.out.println("Writing checksum...");
-    Storage storage = new FileStorage(name, true); 
-    Checksum sum = Checksum.calculateChecksum(storage, Util.toIntNoTruncation(bufferSize >> Main.log2DataLength));
+    long t = System.currentTimeMillis();
+    Storage storage = new FileStorage(name, true/*read only*/); 
+    Checksum sum = Checksum.calculateChecksum(storage, Util.toIntNoTruncation(bufferSizeBytes >> Main.log2DataLength));
     storage.close();
     ChecksumReaderWriter crw = new ChecksumReaderWriter(name + ".checksum");
     crw.writeChecksum(sum, name);
+    long delta = System.currentTimeMillis() - t;
+    System.out.println("Checksum written in "+delta+" ms");
   }
   
   private DataProvider getDataProvider(String modeStr) {

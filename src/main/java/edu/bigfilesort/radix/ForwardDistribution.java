@@ -14,13 +14,18 @@ import static edu.bigfilesort.radix.RadixSort.*;
  * "Forward" in the name means that this distribution integration is 
  * done in such a way that the values can be taken serially
  * in normal iteration order, from the beginning to the end.
- * (Normally in radix sort algorithm the values are taken in the reverse order.)   
+ * (Normally in radix sort algorithm the values are taken in the reverse order.)
+ * 
+ * Performance: AtomicLong counters seem to work ~3.5 times slower than primitive ones.
+ * So, for single-thread execution we optimize with long[] counters array.   
  */
 public class ForwardDistribution {
   
   static final int mask0 = numDigitValues - 1;
   
   private AtomicLong[] counters; // the statistics counters
+  private long[] primitiveCounters;
+  
   private WriteProvider[] regionWriteProviders;
   final int digitNumber; /* 0 .. (numberOfDigits-1) */
   final int bitShift;  
@@ -34,15 +39,18 @@ public class ForwardDistribution {
    */
   final int maxDigitValue;
   
-  private final Storage destinationStorage;
+  long total; // accessed in package for diagnostic purposes 
+  private final boolean atomicCounters;
   
-  long total; 
-
-  
-  public ForwardDistribution(int digitNumber0, Storage destinationStorage0) {
-    counters = new AtomicLong[numDigitValues];
-    for (int i=0; i<counters.length; i++) {
-      counters[i] = new AtomicLong(0);
+  public ForwardDistribution(int digitNumber0, boolean atomicCounters0/*for single thread mode*/) {
+    atomicCounters = atomicCounters0;
+    if (atomicCounters) {
+      counters = new AtomicLong[numDigitValues];
+      for (int i=0; i<counters.length; i++) {
+        counters[i] = new AtomicLong(0);
+      }
+    } else {
+      primitiveCounters = new long[numDigitValues];
     }
     
     digitNumber = digitNumber0;
@@ -60,11 +68,9 @@ public class ForwardDistribution {
       minDigitValue = 0;
       maxDigitValue = numDigitValues - 1;    
     }
-    
-    destinationStorage = destinationStorage0;
   }
   
-  protected void createWriteProviders(long totalBuf) throws IOException {
+  protected void createWriteProviders(Storage destinationStorage, long totalBuf) throws IOException {
     long sum = 0;
     long regionStart, regionLength;
     int buf;
@@ -81,7 +87,7 @@ public class ForwardDistribution {
         }
         regionWriteProviders[regionIndex] = destinationStorage.createWriteProvider(regionStart, regionLength, buf);
       } else {
-        // if the region is empty, do not create anything for it.
+        // NB: optimization: if the region is empty, do not create anything for it.
       }
     }
     assert (sum == total);
@@ -100,20 +106,28 @@ public class ForwardDistribution {
     int index = digitValue - minDigitValue;
     assert (index >= 0);
     assert (index < numDigitValues);
-    counters[index].incrementAndGet();
+    if (atomicCounters) {
+      counters[index].incrementAndGet();
+    } else {
+      ++primitiveCounters[index];
+    }
   }
   
   void disposeCounters() {
     counters = null;
+    primitiveCounters = null;
   }
   
   public void dispose() throws IOException {
     counters = null;
-    for (WriteProvider wp: regionWriteProviders) {
-      if (wp != null) {
-        wp.flush();
-        wp.dispose();
-        wp = null;
+    primitiveCounters = null;
+    if (regionWriteProviders != null) {
+      for (WriteProvider wp: regionWriteProviders) {
+        if (wp != null) {
+          wp.flush();
+          wp.dispose();
+          wp = null;
+        }
       }
     }
     regionWriteProviders = null;
@@ -125,11 +139,19 @@ public class ForwardDistribution {
   
   protected final void integrateBackward() {
     long previous;
-    for (int i=1; i<counters.length; i++) {
-      previous = counters[i-1].get();
-      counters[i].addAndGet(previous);
+    if (atomicCounters) {
+      for (int i=1; i<counters.length; i++) {
+        previous = counters[i-1].get();
+        counters[i].addAndGet(previous);
+      }
+      total = counters[counters.length - 1].get(); // assign total
+    } else {
+      for (int i=1; i<primitiveCounters.length; i++) {
+        previous = primitiveCounters[i-1];
+        primitiveCounters[i] += previous;
+      }
+      total = primitiveCounters[primitiveCounters.length - 1]; // assign total
     }
-    total = counters[counters.length - 1].get();
   }
   
   /**
@@ -137,43 +159,61 @@ public class ForwardDistribution {
    */
   public void integrate() {
     integrateBackward(); // NB: total is set here
-    for (int i=counters.length - 1; i>0; i--) {
-      counters[i].set(counters[i - 1].get());
+    if (atomicCounters) {
+      for (int i=counters.length - 1; i>0; i--) {
+        counters[i].set(counters[i - 1].get());
+      }
+      counters[0].set(0L);
+    } else {
+      for (int i=primitiveCounters.length - 1; i>0; i--) {
+        primitiveCounters[i] = primitiveCounters[i - 1];
+      }
+      primitiveCounters[0] = 0L;
     }
-    counters[0].set(0);
   }
 
   /**
    * Current starting position for the specified digit region
    */
   private final long getRegionStartPosition(int index) {
-    //int index = digitValue - minDigitValue;
     assert (index >= 0);
     assert (index < numDigitValues);
-    return counters[index].get();
+    if (atomicCounters) {
+      return counters[index].get();
+    } else {
+      return primitiveCounters[index];
+    }
   }
   
   /**
    * Remaining length of the specified digit region
    */
   private final long getRegionLength(int index) {
-    //int index = digitValue - minDigitValue;
     assert (index >= 0);
     assert (index < numDigitValues);
     assert (total > 0);
-    if (index == numDigitValues - 1) {
-      return total - counters[index].get();
+    if (atomicCounters) {
+      if (index == numDigitValues - 1) {
+        return total - counters[index].get();
+      } else {
+        return counters[index+1].get() - counters[index].get();
+      }
     } else {
-      return counters[index+1].get() - counters[index].get();
+      if (index == numDigitValues - 1) {
+        return total - primitiveCounters[index];
+      } else {
+        return primitiveCounters[index+1] - primitiveCounters[index];
+      }
     }
   }
-  
-  public long getNextPosition(int digitValue) {
-    int index = digitValue - minDigitValue;
-    assert (index >= 0);
-    assert (index < numDigitValues);
-    return counters[index].getAndIncrement();
-  }
+
+  // makes sense, but unused
+//  public long getNextPosition(int digitValue) {
+//    int index = digitValue - minDigitValue;
+//    assert (index >= 0);
+//    assert (index < numDigitValues);
+//    return counters[index].getAndIncrement();
+//  }
   
   /**
    * This operation may be used concurrently, but with the following restrictions:
