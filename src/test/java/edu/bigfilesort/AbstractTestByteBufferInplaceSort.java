@@ -54,7 +54,7 @@ public abstract class AbstractTestByteBufferInplaceSort {
 
   
   protected void checkSorting() throws Exception {
-    assertEquals(0, CheckSortedMain.mainImpl(file));
+    assertEquals(0, new CheckSortedMain().mainImpl(file));
   }
   
   protected void closeFile() throws Exception {

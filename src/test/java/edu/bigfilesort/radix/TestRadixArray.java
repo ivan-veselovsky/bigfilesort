@@ -9,6 +9,7 @@ import static org.junit.Assert.*;
 import edu.bigfilesort.Util;
 import edu.bigfilesort.UtilForTest;
 import edu.bigfilesort.util.Checksum;
+import edu.bigfilesort.util.ChecksumBuilder;
 
 public class TestRadixArray {
 
@@ -18,7 +19,7 @@ public class TestRadixArray {
   }
   
   void testImpl(final int[] arr) throws IOException {
-    final Checksum sum0 = Checksum.calculateChecksum(arr);
+    final Checksum sum0 = ChecksumBuilder.calculateChecksum(arr);
     System.out.println(sum0);
     
     Storage mainStorage = new ArrayStorage(arr);
@@ -30,7 +31,7 @@ public class TestRadixArray {
     sortImpl(mainStorage, tmpStorage);
     
     assertEquals(arr.length, tmpStorage.length());
-    final Checksum sum1 = Checksum.calculateChecksum(arr);
+    final Checksum sum1 = ChecksumBuilder.calculateChecksum(arr);
     System.out.println(sum1);
     UtilForTest.assertArraySorted(arr); // verify sorting
     assertEquals(sum0, sum1); // verify checksum

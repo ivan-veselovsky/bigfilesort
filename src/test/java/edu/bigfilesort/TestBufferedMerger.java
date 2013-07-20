@@ -33,7 +33,7 @@ public class TestBufferedMerger {
     
     // check sorting:
     moveSrcChecksumToDst(srcFile, dstFile);
-    assertEquals(0, CheckSortedMain.mainImpl(dstFile));
+    assertEquals(0, new CheckSortedMain().mainImpl(dstFile));
   }
 
   private void moveSrcChecksumToDst(String srcFile, String dstFile) {
@@ -65,7 +65,7 @@ public class TestBufferedMerger {
     
      // check sorting:
      moveSrcChecksumToDst(srcFile, dstFile);
-     assertEquals(0, CheckSortedMain.mainImpl(dstFile));
+     assertEquals(0, new CheckSortedMain().mainImpl(dstFile));
   }
 
   @Test
@@ -91,7 +91,7 @@ public class TestBufferedMerger {
     
     // check sorting:
     moveSrcChecksumToDst(srcFile, dstFile);
-    assertEquals(0, CheckSortedMain.mainImpl(dstFile));
+    assertEquals(0, new CheckSortedMain().mainImpl(dstFile));
   }
   
   //@Test disables since it is huge
@@ -106,7 +106,7 @@ public class TestBufferedMerger {
     
     // check sorting:
     moveSrcChecksumToDst(srcFile, dstFile);
-    assertEquals(0, CheckSortedMain.mainImpl(dstFile));
+    assertEquals(0, new CheckSortedMain().mainImpl(dstFile));
   }
   
   

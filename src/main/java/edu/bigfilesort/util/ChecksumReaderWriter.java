@@ -10,6 +10,8 @@ import java.util.Properties;
 
 public class ChecksumReaderWriter {
   
+  public static final String checksumFileSuffix = ".checksum"; 
+  
   private static final String lengthKey = "length";
   private static final String xorKey = "xor";
   private static final String sumKey = "sum";
@@ -41,6 +43,7 @@ public class ChecksumReaderWriter {
     long v = Long.parseLong(valueStr, 16);
     return v;
   }
+
   private int getInt(Properties p, String key) {
     String valueStr = p.getProperty(key);
     // NB: value parsed through long because Integer.parseInt() expects signed value, while

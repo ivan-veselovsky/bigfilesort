@@ -1,10 +1,10 @@
 package edu.bigfilesort.util;
 
-import java.io.IOException;
-
-import edu.bigfilesort.radix.ReadProvider;
-import edu.bigfilesort.radix.Storage;
-
+/**
+ * Checksum that is a sorting invariant.
+ * Now it contains length, xor and arithmetic sums of all the 
+ * numbers in the file.
+ */
 public class Checksum {
 
   public final long length;
@@ -15,36 +15,6 @@ public class Checksum {
     length = length0;
     xor = xor0;
     sum = sum0;
-  }
-  
-  public static Checksum calculateChecksum(int[] array) {
-    int xor = 0;
-    int sum = 0;
-    for (int v: array) {
-      xor ^= v;
-      sum += v;
-    }
-    return new Checksum(array.length, xor, sum);
-  }
-  
-  public static Checksum calculateChecksum(Storage storage, int buf) throws IOException {
-    ReadProvider rp = storage.createReadProvider(0, storage.length(), buf);
-    Checksum sum = calculateChecksum(rp);
-    rp.dispose();
-    return sum;
-  }
-  
-  private static Checksum calculateChecksum(ReadProvider rp) throws IOException {
-    int xor = 0;
-    int sum = 0;
-    int v;
-    final long l = rp.length();
-    while (rp.hasNext()) {
-      v = rp.next();
-      xor ^= v;
-      sum += v;
-    }
-    return new Checksum(l, xor, sum);
   }
   
   @Override

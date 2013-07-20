@@ -8,23 +8,25 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 
-import edu.bigfilesort.radix.FileStorage;
-import edu.bigfilesort.radix.Storage;
 import edu.bigfilesort.util.Checksum;
+import edu.bigfilesort.util.ChecksumBuilder;
 import edu.bigfilesort.util.ChecksumReaderWriter;
 import static edu.bigfilesort.WriteDataMain.bufferSizeBytes;
 
 public class CheckSortedMain {
+
+  public CheckSortedMain() {
+  }
   
   /**
    * @param args
    */
   public static void main(String[] args) throws Exception {
-    int status = mainImpl(args);
+    int status = new CheckSortedMain().mainImpl(args);
     System.exit(status);
   }
   
-  public static int mainImpl(String... args) throws Exception {
+  public int mainImpl(String... args) throws Exception {
     if (args.length < 1) {
       out.println("Paramaters: <file name>");
       return 3;
@@ -48,10 +50,10 @@ public class CheckSortedMain {
     return 0;
   }
   
-  
-  private static void checkSortedImpl(final String name) throws Exception {
+  private void checkSortedImpl(final String name) throws Exception {
     final RandomAccessFile raf = new RandomAccessFile(name, "r"); // read only
     final FileChannel fc = raf.getChannel();
+    final ChecksumBuilder builder = new ChecksumBuilder();
     try {
     final long fileLength = raf.length();
     out.println("Length of ["+name+"] is " + fileLength);
@@ -89,6 +91,7 @@ public class CheckSortedMain {
         int d;
         for (long offset = 0; offset < (len / Main.dataLength); offset++) {
           d = mbb.getInt();
+          builder.next(d);
           if (d < leader) {
             assert readOkayByteCount % Main.dataLength == 0;
         	  throw new IllegalStateException("Sorting violation at *number* position ["
@@ -99,7 +102,6 @@ public class CheckSortedMain {
           readOkayByteCount += Main.dataLength;
         }
         
-        // XXX
         Util.disposeDirectByteBuffer(mbb);
         mbb = null;
       }
@@ -111,22 +113,15 @@ public class CheckSortedMain {
     }
     
     // verify checksum
-    final File checksumFile = new File(name + ".checksum");
+    final File checksumFile = new File(name + ChecksumReaderWriter.checksumFileSuffix);
     if (checksumFile.exists()) {
-      System.out.println("Verifying checksum...");
-      long t = System.currentTimeMillis();
-      Storage storage = new FileStorage(name, true); 
-      Checksum actualSum = Checksum.calculateChecksum(storage, Util.toIntNoTruncation(bufferSizeBytes >> Main.log2DataLength));
-      storage.close();
-      long delta = System.currentTimeMillis() - t;
-      System.out.println("Checksum calculated in "+delta+" ms.");
-      
-      ChecksumReaderWriter crw = new ChecksumReaderWriter(name + ".checksum");
+      Checksum actualChecksum = builder.getChecksum();
+      ChecksumReaderWriter crw = new ChecksumReaderWriter(name + ChecksumReaderWriter.checksumFileSuffix);
       Checksum expectedSum = crw.readChecksum();
-      if (expectedSum.equals(actualSum)) {
+      if (expectedSum.equals(actualChecksum)) {
         System.out.println("Checksum ok.");
       } else {
-        throw new RuntimeException("Checksum verification failed. Expected {"+expectedSum+"}, but found {"+actualSum+"}.");
+        throw new RuntimeException("Checksum verification failed. Expected ["+expectedSum+"], but found ["+actualChecksum+"].");
       }
     }
   }

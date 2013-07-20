@@ -11,6 +11,7 @@ import edu.bigfilesort.CheckSortedMain;
 import edu.bigfilesort.Main;
 import edu.bigfilesort.WriteDataMain;
 import edu.bigfilesort.util.Checksum;
+import edu.bigfilesort.util.ChecksumBuilder;
 
 public class TestRadixFile {
 
@@ -41,7 +42,7 @@ public class TestRadixFile {
     
     final Storage mainStorage = new FileStorage(srcFile, false);
     final Storage tmpStorage = new FileStorage(tmpFile, mainStorage.length());
-    final Checksum sum0 = Checksum.calculateChecksum(mainStorage, (int)(bufLen/2));
+    final Checksum sum0 = ChecksumBuilder.calculateChecksum(mainStorage, (int)(bufLen/2));
     System.out.println("Checksum0: " + sum0);
     final long t0 = System.currentTimeMillis();
     
@@ -55,8 +56,8 @@ public class TestRadixFile {
     new File(tmpFile).delete();
     
     // check sorting:
-    assertEquals(0, CheckSortedMain.mainImpl(srcFile));
-    final Checksum sum1 = Checksum.calculateChecksum(new FileStorage(srcFile, true), (int)(bufLen/2));
+    assertEquals(0, new CheckSortedMain().mainImpl(srcFile));
+    final Checksum sum1 = ChecksumBuilder.calculateChecksum(new FileStorage(srcFile, true), (int)(bufLen/2));
     System.out.println("Checksum1: " + sum1);
     assertEquals(sum0, sum1);
   }

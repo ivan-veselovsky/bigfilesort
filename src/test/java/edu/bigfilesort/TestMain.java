@@ -25,7 +25,7 @@ public class TestMain {
     final long delta0 = System.currentTimeMillis() - t0;
     System.out.println("=================================== Sorting took " + delta0 + " ms.");
     
-    assertEquals(0, CheckSortedMain.mainImpl(file));
+    assertEquals(0, new CheckSortedMain().mainImpl(file));
   }
 
   

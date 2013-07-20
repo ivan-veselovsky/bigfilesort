@@ -27,10 +27,12 @@ public class RadixSort {
   static final int numDigitValues = 1 << bitsPerDigit;
   // --------------------------------------------
 
-  // Internal implementation constant that specifies
-  // ratio = (totalReadBuffers + totalWriteBuffers)/totalReadBuffers: 
-  static final int writeBuffersRatio = 2;
-  
+  /*
+   * Internal implementation constant that specifies
+   * ratio = (totalReadBuffers + totalWriteBuffers)/totalReadBuffers: 
+   * Value of 8 is empirically found to be near-optimal.
+   */
+  static final int writeBuffersRatio = 8;
   
   private final Storage mainStorage, tmpStorage;
   private final long numLength;

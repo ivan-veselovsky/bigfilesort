@@ -32,7 +32,7 @@ public class TestNetSort {
     }
     
     // check sorting:
-    assertEquals(0, CheckSortedMain.mainImpl(file));
+    assertEquals(0, new CheckSortedMain().mainImpl(file));
   }
   
   @Test
@@ -71,7 +71,7 @@ public class TestNetSort {
     }
     System.out.println("cmp count = " + cmp.getCmpCount());
     // check sorting:
-    assertEquals(0, CheckSortedMain.mainImpl(file));
+    assertEquals(0, new CheckSortedMain().mainImpl(file));
   }
   
   @Test
@@ -102,7 +102,7 @@ public class TestNetSort {
     }
     
     // check sorting:
-    assertEquals(0, CheckSortedMain.mainImpl(file));
+    assertEquals(0, new CheckSortedMain().mainImpl(file));
   }
   
   /**
@@ -145,7 +145,7 @@ public class TestNetSort {
     assertEquals(expectedCmp, actualCmp);
     
     // check sorting:
-    assertEquals(0, CheckSortedMain.mainImpl(file));
+    assertEquals(0, new CheckSortedMain().mainImpl(file));
   }
 
   /**
@@ -177,7 +177,7 @@ public class TestNetSort {
     }
     
     // check sorting:
-    assertEquals(0, CheckSortedMain.mainImpl(file));
+    assertEquals(0, new CheckSortedMain().mainImpl(file));
   } 
   
 }

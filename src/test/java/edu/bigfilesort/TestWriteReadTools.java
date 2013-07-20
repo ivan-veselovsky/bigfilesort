@@ -35,7 +35,7 @@ public class TestWriteReadTools {
     {
     out.println("===== reading...");
     long t = System.currentTimeMillis();
-    assertEquals(0, CheckSortedMain.mainImpl(file));
+    assertEquals(0, new CheckSortedMain().mainImpl(file));
     long delta = System.currentTimeMillis() - t;
     out.println("===== Reading took " + delta + " ms");
     }

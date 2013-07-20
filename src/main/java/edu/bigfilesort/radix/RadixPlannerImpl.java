@@ -19,12 +19,7 @@ import edu.bigfilesort.util.Range;
 
 public class RadixPlannerImpl implements TaskPlanner {
   
-  /*
-   * See edu.bigfilesort.radix.RadixSort.writeBuffersRatio.
-   * This constant has the same meaning.
-   * Value of 8 is empirically found to be near-optimal.
-   */
-  private static final int writeBuffersRatio = 8;
+  private static final int writeBuffersRatio = RadixSort.writeBuffersRatio;
   
   private final int threads;
   private final long totalNumbers; // full size of the initial array to be sorted, in numbers.

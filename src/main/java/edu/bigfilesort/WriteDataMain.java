@@ -9,9 +9,7 @@ import java.nio.channels.FileChannel.MapMode;
 import java.util.Random;
 
 import edu.bigfilesort.Util.DivisionResult;
-import edu.bigfilesort.radix.FileStorage;
-import edu.bigfilesort.radix.Storage;
-import edu.bigfilesort.util.Checksum;
+import edu.bigfilesort.util.ChecksumBuilder;
 import edu.bigfilesort.util.ChecksumReaderWriter;
 
 public class WriteDataMain {
@@ -123,6 +121,7 @@ public class WriteDataMain {
     
     final DataProvider provider = getDataProvider(modeStr);
     try {
+      final ChecksumBuilder builder = new ChecksumBuilder();  
       long position, len;
       long writtenCount = 0;
       for (int i=0; i<numWrites; i++) {
@@ -139,6 +138,7 @@ public class WriteDataMain {
         for (long offset = 0; offset < (len / Main.dataLength); offset++) {
           data = provider.next();
           mbb.putInt(data);
+          builder.next(data);
           writtenCount += Main.dataLength;
         }
         
@@ -147,6 +147,9 @@ public class WriteDataMain {
         Util.disposeDirectByteBuffer(mbb);
         mbb = null;
       }
+      
+      ChecksumReaderWriter crw = new ChecksumReaderWriter(name + ChecksumReaderWriter.checksumFileSuffix);
+      crw.writeChecksum(builder.getChecksum(), name);
       
       System.out.println("file length =   " + fileLength);
       System.out.println("written count = " + writtenCount);
@@ -157,15 +160,6 @@ public class WriteDataMain {
       raf.close();
     }
     
-    System.out.println("Writing checksum...");
-    long t = System.currentTimeMillis();
-    Storage storage = new FileStorage(name, true/*read only*/); 
-    Checksum sum = Checksum.calculateChecksum(storage, Util.toIntNoTruncation(bufferSizeBytes >> Main.log2DataLength));
-    storage.close();
-    ChecksumReaderWriter crw = new ChecksumReaderWriter(name + ".checksum");
-    crw.writeChecksum(sum, name);
-    long delta = System.currentTimeMillis() - t;
-    System.out.println("Checksum written in "+delta+" ms");
   }
   
   private DataProvider getDataProvider(String modeStr) {

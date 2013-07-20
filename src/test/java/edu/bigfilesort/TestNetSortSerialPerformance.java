@@ -45,7 +45,7 @@ public class TestNetSortSerialPerformance {
     System.out.println("10m sorting took " + delta + " ms.");
     
     // check sorting:
-    assertEquals(0, CheckSortedMain.mainImpl(file));
+    assertEquals(0, new CheckSortedMain().mainImpl(file));
   } 
   
 }
