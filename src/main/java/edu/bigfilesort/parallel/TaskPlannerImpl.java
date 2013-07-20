@@ -40,7 +40,6 @@ public class TaskPlannerImpl implements TaskPlanner {
   private final long allocatableTotalNumbersMemory;
 
   private final long allocNumbersPerOneThread; // numbers per one sorting task
-  //private final long allocNumbersLastThread; // last thread should process this number of numbers.
   
   // dynamic sorting cascade variables:
   private long sortingRangeSubmitCovered = 0;
@@ -427,7 +426,7 @@ public class TaskPlannerImpl implements TaskPlanner {
     closeFiles();
     
     File z = new File(zFileName);
-    if (isDestinationZFile()) {
+    if (isDestinationZFile() && mergeTasksDone > 0) {
       File original = new File(fileName);
       if (!original.exists()) {
         throw new IOException("Cannot find original file ["+original.getAbsolutePath()+"].");
