@@ -7,7 +7,7 @@ import java.nio.channels.FileChannel.MapMode;
 import edu.bigfilesort.Main;
 import edu.bigfilesort.Util;
 
-public class MappedReadProvider extends BufferedReadRegion implements ReadProvider {
+public class MappedReadProvider extends BufferedReadProvider implements ReadProvider {
 
   public MappedReadProvider(FileChannel fc0, long regNumStart, long regNumLength, int bufNumLen) {
     super(fc0, regNumStart, regNumLength, bufNumLen);

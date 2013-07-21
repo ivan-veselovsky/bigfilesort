@@ -7,7 +7,6 @@ import java.nio.channels.FileChannel;
 import edu.bigfilesort.Main;
 import edu.bigfilesort.Util;
 
-//TODO: refactor. Copied from edu.bigfilesort.BufferedMerger
 /*
  * regStart                                   regStart + regLength - 1
  * |------------------------------------------|
@@ -16,7 +15,7 @@ import edu.bigfilesort.Util;
  * |<---------->| write count
  * |<-->| flushCount 
  */
-public class BufferedWriteRegion implements WriteProvider {
+public class BufferedWriteProvider implements WriteProvider {
   
   protected final long regionStartNumPosition; // inclusive
   protected final long regionNumLength; // how many numbers are in region
@@ -28,7 +27,7 @@ public class BufferedWriteRegion implements WriteProvider {
   protected long writeCount; // how many numbers written to buffer or flushed.
   protected long flushCount; // how many numbers are flushed (written to underlying storage).
   
-  public BufferedWriteRegion(FileChannel fc0, long regNumStart, long regNumLength, int bufNumLen) throws IOException {
+  public BufferedWriteProvider(FileChannel fc0, long regNumStart, long regNumLength, int bufNumLen) throws IOException {
     fc = fc0;
     regionStartNumPosition = regNumStart;
     regionNumLength = regNumLength;

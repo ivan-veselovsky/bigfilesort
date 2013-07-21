@@ -7,7 +7,6 @@ import java.nio.channels.FileChannel;
 import edu.bigfilesort.Main;
 import edu.bigfilesort.Util;
 
-// TODO: refactor. Copied from edu.bigfilesort.BufferedMerger
 /*
  * regStart                                   regStart + regLength - 1
  * |------------------------------------------|
@@ -16,7 +15,7 @@ import edu.bigfilesort.Util;
  * |------------>
  *               read count      
  */
-public class BufferedReadRegion implements ReadProvider {
+public class BufferedReadProvider implements ReadProvider {
   protected final long regionStartNumPosition; // inclusive
   protected final long regionNumLength; // how many numbers are in region
   protected final FileChannel fc;
@@ -27,7 +26,7 @@ public class BufferedReadRegion implements ReadProvider {
   protected long readCount;
   protected long buffered;
   
-  public BufferedReadRegion(FileChannel fc0, long regNumStart, long regNumLength, int bufNumLen) {
+  public BufferedReadProvider(FileChannel fc0, long regNumStart, long regNumLength, int bufNumLen) {
     fc = fc0;
     regionStartNumPosition = regNumStart;
     regionNumLength = regNumLength;

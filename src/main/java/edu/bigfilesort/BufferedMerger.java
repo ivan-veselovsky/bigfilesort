@@ -3,8 +3,8 @@ package edu.bigfilesort;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 
-import edu.bigfilesort.radix.BufferedReadRegion;
-import edu.bigfilesort.radix.BufferedWriteRegion;
+import edu.bigfilesort.radix.BufferedReadProvider;
+import edu.bigfilesort.radix.BufferedWriteProvider;
 import edu.bigfilesort.radix.MappedReadProvider;
 import edu.bigfilesort.radix.MappedWriteProvider;
 import edu.bigfilesort.radix.ReadProvider;
@@ -91,9 +91,9 @@ public class BufferedMerger {
       rightReadRegion = new MappedReadProvider(rightReadFc, rightReadStartNumPos, rightNumLength, rightBuffer);
       writeRegion = new MappedWriteProvider(writeFc, writeStartNumPos, leftNumLength + rightNumLength, writeBuffer);
     } else {
-      leftReadRegion = new BufferedReadRegion(leftReadFc, leftReadStartNumPos, leftNumLength, leftBuffer);
-      rightReadRegion = new BufferedReadRegion(rightReadFc, rightReadStartNumPos, rightNumLength, rightBuffer);
-      writeRegion = new BufferedWriteRegion(writeFc, writeStartNumPos, leftNumLength + rightNumLength, writeBuffer);
+      leftReadRegion = new BufferedReadProvider(leftReadFc, leftReadStartNumPos, leftNumLength, leftBuffer);
+      rightReadRegion = new BufferedReadProvider(rightReadFc, rightReadStartNumPos, rightNumLength, rightBuffer);
+      writeRegion = new BufferedWriteProvider(writeFc, writeStartNumPos, leftNumLength + rightNumLength, writeBuffer);
     }
   }
   

@@ -66,7 +66,7 @@ public class FileStorage implements Storage {
     if (Main.readWriteProvidersMapped) {
       return new MappedReadProvider(fc, start, len, buf);
     } else {
-      return new BufferedReadRegion(fc, start, len, buf);
+      return new BufferedReadProvider(fc, start, len, buf);
     }
   }
 
@@ -83,7 +83,7 @@ public class FileStorage implements Storage {
     if (Main.readWriteProvidersMapped) {
       return new MappedWriteProvider(fc, start, len, buf);
     } else {
-      return new BufferedWriteRegion(fc, start, len, buf);
+      return new BufferedWriteProvider(fc, start, len, buf);
     }
   }
   

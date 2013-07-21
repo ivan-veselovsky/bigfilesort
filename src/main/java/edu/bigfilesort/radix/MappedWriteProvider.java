@@ -7,7 +7,7 @@ import java.nio.channels.FileChannel.MapMode;
 import edu.bigfilesort.Main;
 import edu.bigfilesort.Util;
 
-public class MappedWriteProvider extends BufferedWriteRegion implements
+public class MappedWriteProvider extends BufferedWriteProvider implements
     WriteProvider {
   
   private int currentBufferLength;
