@@ -16,6 +16,7 @@ import edu.bigfilesort.parallel.ResourceTask;
 import edu.bigfilesort.parallel.TaskPlanner;
 import edu.bigfilesort.util.LargeFirstDivisionResultIterator;
 import edu.bigfilesort.util.Range;
+import edu.bigfilesort.util.ResettableIterator;
 
 public class RadixPlannerImpl implements TaskPlanner {
   
@@ -32,9 +33,9 @@ public class RadixPlannerImpl implements TaskPlanner {
   // max total number of ints we can allocate using mapped or direct buffers:
   private final long allocatableTotalNumbersMemory;
 
-  private LargeFirstDivisionResultIterator allocMemoryIterator; // it is re-created, so not final
-  private final LargeFirstDivisionResultIterator numberRangeIterator;
-  private final LargeFirstDivisionResultIterator digitValuesRangeIterator;   
+  private ResettableIterator<Range> allocMemoryIterator; // it is re-created, so not final
+  private final ResettableIterator<Range> numberRangeIterator;
+  private final ResettableIterator<Range> digitValuesRangeIterator;   
   
   // dynamic sorting cascade variables:
   private boolean integrated = false;
@@ -185,21 +186,12 @@ public class RadixPlannerImpl implements TaskPlanner {
   }
   
   private void nextDigit() {
-    //integrated = false;
-    
     sortingTasksSubmitted = 0;
     sortingTasksDone = 0;
     
-//    countingTasksSubmitted = 0;
-//    countingTasksDone = 0;
-    
     digitValuesRangeIterator.reset();
-    //allocMemoryIterator.reset();
     assert (allocResource == allocatableTotalNumbersMemory);
     allocMemoryIterator = new LargeFirstDivisionResultIterator(Util.divideByApproximatelyEqualParts(allocResource, threads));
-    //numberRangeIterator.reset();
-    // re-create radix impl for next digit:
-    //radixConcurrentImpl = new RadixConcurrentImpl(mainStorage, tmpStorage, digitNumber);
   }
   
   static class CountingTask extends ResourceTask {

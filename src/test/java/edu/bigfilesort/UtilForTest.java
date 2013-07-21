@@ -6,6 +6,8 @@ import static java.lang.System.out;
 import java.util.Random;
 
 public class UtilForTest {
+  
+  public static final String testDataDir = "test-data";
 
   public static void assertArraySorted(int[] a) {
     for (int i=0 ; i<a.length-1; i++) {

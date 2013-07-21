@@ -4,6 +4,9 @@ import static java.lang.System.out;
 
 import java.io.File;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import edu.bigfilesort.parallel.Exec;
@@ -36,14 +39,16 @@ public class Main {
 
    public static final boolean countersEnabled = false; // counters in sort algorithms
    
-   private boolean radix = true; // use radix parallel implementation  
+   boolean radix = true; // use radix parallel implementation (default is true)  
 
    /*
-    * On Windows-32 Mapped providers perform much slower (~3 times) than Direct (don't know why).
     * On CentOS-64 the performance is nearly the same, though, Direct are faster by ~8%.
     * So, to achieve best performance its recommended to use Direct mode.
+    * 
+    * !! Note that in-place comparison sorting engine uses *mapped* memory independently on this option value.
+    * This value affects merging and radix rewriting routines.  
     */
-   public static final boolean readWriteProvidersMapped = false; // 'true' to use "Mapped", 'false' to use "Direct".   
+   public static boolean readWriteProvidersMapped = false; // 'true' to use "Mapped", 'false' to use "Direct".   
    
    // ----------------------------------------------------------------
    
@@ -87,10 +92,14 @@ public class Main {
      return ints >> (20 - log2DataLength);
    }
    
-   private int setParameters(String[] args) throws Exception {
-      if (args.length < 2) {
-         out.println("Parameters: <file name> <thread count> [max allowed native memory in mega bytes]");
+   private int setParameters(final String[] args0) throws Exception {
+     assert Util.assertionsEnabled(); // print out if the assertions are enabled. This is important for performance measurements.
+     final List<String> argList = new ArrayList<String>(Arrays.asList(args0)); 
+      if (argList.size() < 2) {
+         out.println("Parameters: [-m] [-c] <file name> <thread count> [max allowed native memory in mega bytes]");
          out.println("(Default for the last parameter is " + intsToMegabytes(maxAllocNumbers) + " Mb.)");
+         out.println(" \"-m\" option instructs to use mapped buffers instead of direct in merging and radix rewriting tasks.");
+         out.println(" \"-c\" option instructs to use in-place comparison sorting with subsequent merging instead of radix sorting.");
          out.println("Example:");
          out.println(" ./bigfilesort.sh test-putina-naxuy.data 7 1024");
          out.println("sorts the file using 7 threads with 1024 megabytes of total allowed native memory (both direct + mapped).");
@@ -98,8 +107,24 @@ public class Main {
          return 3;
       }
 
+      // options:
+      String opt;
+      while (argList.size() > 0) {
+        opt = argList.get(0);
+        if ("-m".equals(opt)) {
+          readWriteProvidersMapped = true;
+        } else if ("-c".equals(opt)) {
+          radix = false;
+        } else {
+          break;
+        }
+        argList.remove(0);
+      }
+      out.println((radix ? "Radix" : "In-place copmarison") + " sorting.");
+      out.println((readWriteProvidersMapped ? "Mapped" : "Direct") + " buffers.");
+      
       // the input file:
-      fileName = args[0];
+      fileName = argList.remove(0);
       final File f = new File(fileName);
       if (!f.exists() || !f.isFile() || !f.canRead() || !f.canWrite()) {
          out.println("File ["
@@ -117,16 +142,17 @@ public class Main {
       }
 
       // thread count:
-      threadCount = Integer.parseInt(args[1]);
+      String threads = argList.remove(0);
+      threadCount = Integer.parseInt(threads);
       out.println("Threads: " + threadCount);
       if (threadCount < 1) {
          out.println("Thread count [" + threadCount + "] is less than 1.");
          return 3;
       }
 
-      // max alloc native
-      if (args.length > 2) {
-        long mb = Long.parseLong(args[2]);
+      // max alloc native (optional)
+      if (argList.size() > 0) {
+        long mb = Long.parseLong(argList.remove(0));
         if (mb <= 0) {
           out.println("Max native alloc must be positive. (" + mb + " specified.)");
           return 3;

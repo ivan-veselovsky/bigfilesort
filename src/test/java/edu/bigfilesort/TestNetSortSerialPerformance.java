@@ -20,7 +20,7 @@ public class TestNetSortSerialPerformance {
   public void testSorting1M() throws Exception {
     // NB: size is reduced to make the test faster 
     final long numLength = 1L * 1024 * 128 / Main.dataLength; //1L * 1024 * 1024 / Main.dataLength;
-    final String file = "test-sort-1m.data";
+    final String file = UtilForTest.testDataDir + "/" + "test-sort-1m.data";
     
     WriteDataMain writeDataMain = new WriteDataMain();
     assertEquals(0, writeDataMain.mainImpl(file, Long.toString(Main.dataLength * numLength), 

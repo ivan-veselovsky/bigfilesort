@@ -59,11 +59,11 @@ public class MappedWriteProvider extends BufferedWriteRegion implements
   void flushImpl() throws IOException {
     final long numsToFlush = writeCount - flushCount;
     assert (numsToFlush == currentBufferLength);
+    if (buf != null) {
+      Util.disposeDirectByteBuffer(buf);
+      buf = null;
+    }
     if (numsToFlush > 0) {
-      if (buf != null) {
-        Util.disposeDirectByteBuffer(buf);
-        buf = null;
-      }
       flushCount = writeCount; // advance flushCount
       initBuffer();
     }

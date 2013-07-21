@@ -67,7 +67,7 @@ public abstract class AbstractTestByteBufferInplaceSort {
   }
 
   protected final void defineFile(String suffix) {
-    file = getClass().getSimpleName() + "-" + suffix;
+    file = UtilForTest.testDataDir + "/" + getClass().getSimpleName() + "-" + suffix;
   }  
   
   @Test

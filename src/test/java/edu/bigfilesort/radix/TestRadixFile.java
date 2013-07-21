@@ -9,6 +9,7 @@ import static org.junit.Assert.*;
 
 import edu.bigfilesort.CheckSortedMain;
 import edu.bigfilesort.Main;
+import edu.bigfilesort.UtilForTest;
 import edu.bigfilesort.WriteDataMain;
 import edu.bigfilesort.util.Checksum;
 import edu.bigfilesort.util.ChecksumBuilder;
@@ -32,8 +33,8 @@ public class TestRadixFile {
   
   protected void testImpl(long numLength, long bufLen)  throws Exception {
     System.out.println("=============================== " + numLength);
-    final String srcFile = "test-merge-"+numLength+"-src.data";
-    final String tmpFile = "test-merge-"+numLength+"-src.data.tmp";
+    final String srcFile = UtilForTest.testDataDir + "/" + "test-merge-"+numLength+"-src.data";
+    final String tmpFile = UtilForTest.testDataDir + "/" + "test-merge-"+numLength+"-src.data.tmp";
     // write:
     WriteDataMain writeDataMain = new WriteDataMain();
     assertEquals(0, writeDataMain.mainImpl(srcFile, Long.toString(Main.dataLength * numLength), 

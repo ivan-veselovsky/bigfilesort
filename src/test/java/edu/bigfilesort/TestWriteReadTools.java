@@ -20,7 +20,7 @@ public class TestWriteReadTools {
   
   @Test
   public void testWriteRead() throws Exception {
-    String file = "test-"+(byteLength/Main.megaByte)+"m.data";
+    String file = UtilForTest.testDataDir + "/" + "test-"+(byteLength/Main.megaByte)+"m.data";
 
     {
     out.println("===== writing...");

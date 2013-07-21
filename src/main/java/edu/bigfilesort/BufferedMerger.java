@@ -1,11 +1,18 @@
 package edu.bigfilesort;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
+import edu.bigfilesort.radix.BufferedReadRegion;
+import edu.bigfilesort.radix.BufferedWriteRegion;
+import edu.bigfilesort.radix.MappedReadProvider;
+import edu.bigfilesort.radix.MappedWriteProvider;
+import edu.bigfilesort.radix.ReadProvider;
+import edu.bigfilesort.radix.WriteProvider;
+
 /*
- * Implementation with no direct mapping, just native byte buffers. 
+ * Implementation with optionally chooseable buffers: mapped or direct.
+ * See edu.bigfilesort.Main.readWriteProvidersMapped. 
  */
 public class BufferedMerger {
 
@@ -21,8 +28,8 @@ public class BufferedMerger {
   
   private long writeStartNumPos;
   
-  private BufferedReadRegion leftReadRegion, rightReadRegion;
-  private BufferedWriteRegion writeRegion;
+  private ReadProvider leftReadRegion, rightReadRegion;
+  private WriteProvider writeRegion;
 
   public BufferedMerger(long totalAllowedBufNumSize) {
     totalAllowedBuffersNumberSize = totalAllowedBufNumSize;
@@ -45,181 +52,11 @@ public class BufferedMerger {
     writeStartNumPos = numStart;
   }
   
-  public void init() {
+  public void init() throws IOException {
     calculateBufferSizes(totalAllowedBuffersNumberSize);
   }
   
-  /*
-   * regStart                                   regStart + regLength - 1
-   * |------------------------------------------|
-   *      |===========|
-   *      buffer
-   * |------------>
-   *               read count      
-   */
-  static class BufferedReadRegion {
-    private final long regionStartNumPosition; // inclusive
-    private final long regionNumLength; // how many numbers are in region
-    private final FileChannel fc;
-    
-    private ByteBuffer buf; // not final since it can be re-allocated in principle
-    private final int bufferNumLength;
-    
-    private long readCount;
-    private long buffered;
-    
-    public BufferedReadRegion(FileChannel fc0, long regNumStart, long regNumLength, int bufNumLen) {
-      fc = fc0;
-      regionStartNumPosition = regNumStart;
-      regionNumLength = regNumLength;
-      bufferNumLength = bufNumLen;
-      readCount = 0;
-      buffered = 0;
-      initBuffer();
-    }
-    
-    void initBuffer() {
-      // NB: buffer may be re-allocated in principle
-      if (buf != null) {
-        Util.disposeDirectByteBuffer(buf);
-      }
-      // NB: this check is too strict: current algorithm allows small regions to be merged.
-//      if (bufferNumLength > regionNumLength) {
-//        throw new IllegalStateException("Unecessary buffer length: buf="+bufferNumLength+" > regionNumLength="+regionNumLength);
-//      }
-      int size = bufferNumLength << Main.log2DataLength;
-      //if (Main.debug) { System.out.println("Allocating direct buffer of "+bufferNumLength+" ints."); }
-      buf = ByteBuffer.allocateDirect(size).order(Main.byteOrder);
-    }
-    
-    protected void placeBufferImpl() throws IOException {
-      long numsToBuf = regionNumLength - buffered;
-      // TODO: may truncate the buffer when needed. 
-      if (numsToBuf > bufferNumLength) {
-        numsToBuf = bufferNumLength;
-      }
-      buf.position(0);
-      buf.limit((int)(numsToBuf << Main.log2DataLength));
-      long byteStartBufPos = (regionStartNumPosition + buffered) << Main.log2DataLength;  
-      fc.read(buf, byteStartBufPos);
-      buf.flip();
-      buffered += numsToBuf;
-    } 
-    
-    final boolean hasNext() throws IOException {
-      if (readCount == regionNumLength) {
-        return false; // region finished.
-      }
-      if (readCount == buffered) {
-        // shift the buffer:
-        placeBufferImpl();
-      } 
-      return true;
-    }
-    
-    /**
-     * Note that it does not check if the number is available
-     * @return
-     */
-    final int next() {
-      assert (readCount < regionNumLength);
-      assert (readCount < buffered);
-      int v = buf.getInt();
-      readCount++;
-      return v;
-    }
-    
-    void dispose() {
-      if (buf != null) {
-        Util.disposeDirectByteBuffer(buf);
-        buf = null;
-      }
-    }
-  }
-
-  /*
-   * regStart                                   regStart + regLength - 1
-   * |------------------------------------------|
-   *      |===========|
-   *      buffer
-   * |<---------->| write count
-   * |<-->| flushCount 
-   */
-  static class BufferedWriteRegion {
-    
-    private final long regionStartNumPosition; // inclusive
-    private final long regionNumLength; // how many numbers are in region
-    private final FileChannel fc;
-    
-    private ByteBuffer buf;
-    private final int bufferNumLength;
-    
-    private long writeCount; // how many numbers written to buffer or flushed.
-    private long flushCount; // how many numbers are flushed (written to underlying storage).
-    
-    public BufferedWriteRegion(FileChannel fc0, long regNumStart, long regNumLength, int bufNumLen) {
-      fc = fc0;
-      regionStartNumPosition = regNumStart;
-      regionNumLength = regNumLength;
-      bufferNumLength = bufNumLen;
-      writeCount = 0;
-      flushCount = 0;
-      initBuffer();
-    }
-    
-    void initBuffer() {
-      // NB: buffer may be re-allocated
-      if (buf != null) {
-        Util.disposeDirectByteBuffer(buf);
-      }
-//      // this check is overestimation:
-//      if (bufferNumLength > regionNumLength) {
-//        throw new IllegalStateException("Unnecessary buffer length");
-//      }
-      int size = bufferNumLength << Main.log2DataLength;
-      if (Main.debug) { System.out.println("Allocating direct buffer of "+bufferNumLength+" ints."); }
-      buf = ByteBuffer.allocateDirect(size).order(Main.byteOrder);
-      buf.clear();
-    }
-    
-    protected void flush() throws IOException {
-      final long numsToFlush = writeCount - flushCount;
-      if (numsToFlush > 0) {
-        buf.position(0);
-        buf.limit((int)(numsToFlush << Main.log2DataLength));
-        long byteStartBufPos = (regionStartNumPosition + flushCount) << Main.log2DataLength;  
-        fc.write(buf, byteStartBufPos);
-        buf.clear();
-        flushCount += numsToFlush;
-        //if (Main.debug) { System.out.println("flushCount = " + flushCount+", advanced by " + numsToFlush); }
-      }
-    } 
-    
-    void dispose() {
-      if (Main.debug) { 
-        System.out.println("writeCount = " + writeCount);
-        System.out.println("flushCount = " + flushCount); 
-      }
-      assert (writeCount == flushCount);
-      if (buf != null) {
-        Util.disposeDirectByteBuffer(buf);
-        buf = null;
-      }
-    }
-    
-    final void put(int value) throws IOException {
-      assert (writeCount < regionNumLength);
-      assert (flushCount <= writeCount);
-      buf.putInt(value);
-      writeCount++;
-      if (writeCount == flushCount + bufferNumLength) {
-        flush(); // flush the buffer
-      } 
-    }
-  }
-  
-  
-  private void calculateBufferSizes(long totalBufNumSize/*in numbers*/) {
+  private void calculateBufferSizes(long totalBufNumSize/*in numbers*/) throws IOException {
     if (totalBufNumSize < 4) {
       throw new IllegalArgumentException("Buffer too small for merging: " + totalBufNumSize);
     }
@@ -243,11 +80,28 @@ public class BufferedMerger {
       leftBuffer <<= 1;
       rightBuffer = 0;
     }
-    
-    leftReadRegion = new BufferedReadRegion(leftReadFc, leftReadStartNumPos, leftNumLength, leftBuffer);
-    rightReadRegion = new BufferedReadRegion(rightReadFc, rightReadStartNumPos, rightNumLength, rightBuffer);
-    
-    writeRegion = new BufferedWriteRegion(writeFc, writeStartNumPos, leftNumLength + rightNumLength, halfInt); 
+
+    // truncate buffers: 
+    leftBuffer = truncateBuffer(leftNumLength, leftBuffer);
+    rightBuffer = truncateBuffer(leftNumLength, rightBuffer);
+    int writeBuffer = truncateBuffer(leftNumLength + rightNumLength, halfInt);
+    // create providers:
+    if (Main.readWriteProvidersMapped) {
+      leftReadRegion = new MappedReadProvider(leftReadFc, leftReadStartNumPos, leftNumLength, leftBuffer);
+      rightReadRegion = new MappedReadProvider(rightReadFc, rightReadStartNumPos, rightNumLength, rightBuffer);
+      writeRegion = new MappedWriteProvider(writeFc, writeStartNumPos, leftNumLength + rightNumLength, writeBuffer);
+    } else {
+      leftReadRegion = new BufferedReadRegion(leftReadFc, leftReadStartNumPos, leftNumLength, leftBuffer);
+      rightReadRegion = new BufferedReadRegion(rightReadFc, rightReadStartNumPos, rightNumLength, rightBuffer);
+      writeRegion = new BufferedWriteRegion(writeFc, writeStartNumPos, leftNumLength + rightNumLength, writeBuffer);
+    }
+  }
+  
+  private int truncateBuffer(long length, int buf) {
+    if (buf > length) {
+      return Util.toIntNoTruncation(length);
+    }
+    return buf;
   }
   
   public void merge() throws IOException {

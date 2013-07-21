@@ -13,7 +13,7 @@ public class TestNetSort {
 
   @Test
   public void testComparator() throws Exception {
-    String file = "test-comparator.data";
+    String file = UtilForTest.testDataDir + "/" + "test-comparator.data";
     
     // write:
     WriteDataMain writeDataMain = new WriteDataMain();
@@ -49,7 +49,7 @@ public class TestNetSort {
   @Test
   public void testMerge2() throws Exception {
     final long numLength = 2;
-    final String file = "test-merge-2.data";
+    final String file = UtilForTest.testDataDir + "/" + "test-merge-2.data";
     
     // write:
     WriteDataMain writeDataMain = new WriteDataMain();
@@ -77,7 +77,7 @@ public class TestNetSort {
   @Test
   public void testMerge32() throws Exception {
     final long numLength = 32;
-    final String file = "test-merge.data";
+    final String file = UtilForTest.testDataDir + "/" + "test-merge.data";
     
     DataProvider provider = new MergeTestDataProvider((int)numLength, 0, 2, 1);
     WriteDataMain writeDataMain = new WriteDataMain();
@@ -112,7 +112,7 @@ public class TestNetSort {
   @Test
   public void testSortingByRecursiveMerge() throws Exception {
     final long numLength = 1024 * 16;
-    final String file = "test-sort.data";
+    final String file = UtilForTest.testDataDir + "/" + "test-sort.data";
     
     //DataProvider provider = new MergeTestDataProvider((int)numLength, 0, 2, 1);
     WriteDataMain writeDataMain = new WriteDataMain();
@@ -154,7 +154,7 @@ public class TestNetSort {
   @Test
   public void testSortingBy2HalfMerge() throws Exception {
     final long numLength = 64;
-    final String file = "test-sort64.data";
+    final String file = UtilForTest.testDataDir + "/" + "test-sort64.data";
     
     WriteDataMain writeDataMain = new WriteDataMain();
     assertEquals(0, writeDataMain.mainImpl(file, "" + (Main.dataLength * numLength), 

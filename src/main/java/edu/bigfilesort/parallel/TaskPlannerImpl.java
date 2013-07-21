@@ -6,8 +6,6 @@ import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -20,6 +18,13 @@ import edu.bigfilesort.InplaceSortDataProvider;
 import edu.bigfilesort.Main;
 import edu.bigfilesort.Util;
 import edu.bigfilesort.Util.DivisionResult;
+import edu.bigfilesort.util.CoveringIterator;
+import edu.bigfilesort.util.GroupingIterator;
+import edu.bigfilesort.util.LargeFirstDivisionResultIterator;
+import edu.bigfilesort.util.LoopingIterator;
+import edu.bigfilesort.util.Range;
+import edu.bigfilesort.util.ResettableIterator;
+import edu.bigfilesort.util.SmallFirstDivisionResultIterator;
 
 import static java.lang.System.out;
 
@@ -39,10 +44,14 @@ public class TaskPlannerImpl implements TaskPlanner {
   // max total number of ints we can allocate using mapped or direct buffers:
   private final long allocatableTotalNumbersMemory;
 
-  private final long allocNumbersPerOneThread; // numbers per one sorting task
+  //private final long allocNumbersPerOneThread; // numbers per one sorting task
+  private final ResettableIterator<Range> sortCoveringIterator;
+  
+  private final ResettableIterator<Range> mergeMemoryLoopingIterator;
+  private final GroupingIterator mergeGroupingIterator;
   
   // dynamic sorting cascade variables:
-  private long sortingRangeSubmitCovered = 0;
+  private long sortingRangeSubmitCovered = 0; // diagnostic only
   private long sortingTasksSubmited = 0;  
   private long sortingTasksDone = 0;
 
@@ -51,20 +60,8 @@ public class TaskPlannerImpl implements TaskPlanner {
   
   // dynamic merging cascade variables:
   private int mergeCascadeIndex = 1;
-  
-  // XXX: these lists size is O(N). Not good. Strictly speaking, this 
-  // should be refactored because we may store O(1) data only: 
-  private final List<Data> dataList = new ArrayList<Data>();
-  private final List<Data> zDataList = new ArrayList<Data>();
-  
-  private static class Data {
-    Data(long start, long len) {
-      startNumPos = start;
-      numLen = len;
-    }
-    final long startNumPos;
-    final long numLen;
-  }
+  private long cascadeTaskCount = 0; // allows to detect the last cascade
+  private long cascadeMergeRangeCovered = 0; // diagnostic only 
   
   // common:
   private long allocResource;
@@ -85,10 +82,17 @@ public class TaskPlannerImpl implements TaskPlanner {
     assert (raf.length() >> Main.log2DataLength == totalNumbers0);
     assert (raf.length() % Main.dataLength == 0);
     
-    {
-      DivisionResult div = Util.divideByApproximatelyEqualParts(allocatableTotalNumbersMemory, threads);
-      allocNumbersPerOneThread = Math.max(div.largerPartLength, div.smallerPartLength);
-    }
+    final DivisionResult allocByThreads = Util.divideByApproximatelyEqualParts(allocatableTotalNumbersMemory, threads);
+
+    // covers entire number range by the ranges to sort:
+    sortCoveringIterator = new CoveringIterator(totalNumbers, new SmallFirstDivisionResultIterator(allocByThreads));
+    
+    mergeMemoryLoopingIterator = new LoopingIterator(new SmallFirstDivisionResultIterator(allocByThreads));
+    
+    // NB: iterator "mergeGroupingIterator" gives the ranges to merge.
+    // Its' group factor is multiplied by 2 each time we start next merging cascade. 
+    ResettableIterator<Range> mergeBase = new CoveringIterator(totalNumbers, new SmallFirstDivisionResultIterator(allocByThreads));
+    mergeGroupingIterator = new GroupingIterator(mergeBase, 1);
 
     sortingRangeSubmitCovered = 0;
     allocResource = allocatableTotalNumbersMemory; // set total
@@ -107,42 +111,34 @@ public class TaskPlannerImpl implements TaskPlanner {
     lock.lock();
     try {
       ResourceTask task;
-      while (true) {
-        long toCover = totalNumbers - sortingRangeSubmitCovered;
-        if (toCover > 0) {
-          long startPos = sortingRangeSubmitCovered; 
-          long len = Math.min(toCover, allocNumbersPerOneThread); 
-          len = Math.min(len, allocResource);
-          // XXX even very small sortings are now allowed. This may be not quite efficient. 
-          if (len == 0) {
-            if (Main.debug) { out.println("##### planner: waiting for available resources..."); }
-            // wait while next sorting task completed
-            // to increase the allocResource:
-            condition.await();
-          } else {
-            // submit task:
-            task = createSortingTaskImpl(id, startPos, len);
-            // save the positions for future merging:
-            dataList.add(new Data(startPos, len));
-            // update:
-            sortingTasksSubmited++;
-            sortingRangeSubmitCovered += len;
-            allocResource -= len;
-            assert (allocResource >= 0);
-            return task;
+      Range numberRangeToSort = sortCoveringIterator.next();
+      if (numberRangeToSort != null) {
+          while (true) {
+            if (numberRangeToSort.length > allocResource) {
+              if (Main.debug) { out.println("##### planner: waiting for available resources..."); }
+              // wait while next sorting task completed
+              // to increase the allocResource:
+              condition.await();
+            } else {
+              // create and submit next sorting task:
+              task = createSortingTaskImpl(id, numberRangeToSort);
+              // update:
+              sortingTasksSubmited++;
+              sortingRangeSubmitCovered += numberRangeToSort.length;
+              allocResource -= numberRangeToSort.length;
+              assert (allocResource >= 0);
+              return task;
+            }
           }
-        } else {
-          break; // all sorting tasks have been submitted.
-        }
-      }
-      
-      assert (allocResource >= 0);
+      } 
+      assert (sortingRangeSubmitCovered == totalNumbers); // all sort submitted
+      assert (allocResource >= 0); // must not be negative
       // wait until all sorting tasks are finished:
       while (sortingTasksDone < sortingTasksSubmited) {
         condition.await();
       } 
       assert (sortingTasksDone == sortingTasksSubmited);
-      if (Main.debug) { out.println("##### planner: all sorting tasks are done."); }
+      if (Main.debug) { out.println("############## planner: all sorting tasks are finished."); }
 
       if (sortingTasksDone > 1) {
         // Need merge. So, allocate temp file for merging:
@@ -163,7 +159,7 @@ public class TaskPlannerImpl implements TaskPlanner {
   }
 
  //----------------------------------------------------
-  // cyclomatic overview:
+ // cyclomatic overview:
 //  while(true) {
 //  
 //    while (true) {  
@@ -188,99 +184,88 @@ public class TaskPlannerImpl implements TaskPlanner {
 //  }
   // -----------------------------------------------
   private ResourceTask getNextMergeTask(final int id) throws InterruptedException {
-    if (mergeTasksSubmited == 0) {
-      assert assertDataListsOkay(dataList);
-    }
-    
-    List<Data> srcList, dstList;
     FileChannel srcFc, dstFc;
     // loop by the merging cascades:
     while (true) {
       // 1st mergeCascadeIndex == 1, so 1st time go by 'true' branch:
-      // set refs accordingly to the current cascade index: 
+      // set refs accordingly to the current cascade index:
       if (isDestinationZFile()) {
-        srcList = dataList;
-        dstList = zDataList;
         srcFc = fc;
         dstFc = fcZ;
         if (Main.debug) { out.println(" DST = Z."); }
       } else {
-        srcList = zDataList;
-        dstList = dataList;
         srcFc = fcZ;
         dstFc = fc;
         if (Main.debug) { out.println(" DST = original."); }
       }
       
-      long alloc;
-      while (true) {
-        alloc = Math.min(allocNumbersPerOneThread, allocResource);
-        if (alloc == 0) {
-          if (Main.debug) { out.println("Planner: Merge: waiting for available resources........."); }
-          // wait while next sorting task completed
-          // to increase the allocResource:
-          condition.await();
-        } else {
-          break; // ok, there are some resources available
+      final Range leftMergeRange = mergeGroupingIterator.next();
+      if (leftMergeRange != null) {
+        final Range rightMergeRange = mergeGroupingIterator.next(); // NB: it may be null
+      
+        final Range allocRange = mergeMemoryLoopingIterator.next();
+        final long alloc = allocRange.length;
+        while (true) {
+          if (alloc > allocResource) {
+            if (Main.debug) { out.println("Planner: Merge: waiting for available resources."); }
+            // wait while some merging task completed
+            // to increase the allocResource:
+            condition.await();
+          } else {
+            break; // ok, necessary resources available
+          }
         }
+      
+        // plan next task:
+        cascadeTaskCount++;
+        cascadeMergeRangeCovered += leftMergeRange.length;
+        if (rightMergeRange != null) {
+          cascadeMergeRangeCovered += rightMergeRange.length;
+        }
+        return nextInCurrentMergeCascade(id, alloc, leftMergeRange, rightMergeRange, srcFc, dstFc);
       }
       
-      // plan next task:
-      if (srcList.size() > 0) {
-        // this call updates srcList: it removes the merged tasks from there
-        // and puts new tasks to the dstList:
-        return nextInCurrentMergeCascade(id, alloc, srcList, dstList, srcFc, dstFc);
-      } 
-      
-      // wait the cascade to finish completely:
+      // wait the current merge cascade to finish completely:
       while (mergeTasksDone < mergeTasksSubmited) {
         condition.await();
       }
       assert (mergeTasksDone == mergeTasksSubmited);
-      // all the elements were removed from srcList: 
-      assert (srcList.size() == 0);
+      assert (cascadeMergeRangeCovered == totalNumbers);
+      assert (mergeGroupingIterator.next() == null);
+
+      if (cascadeTaskCount == 1) { // the last cascade
+        if (Main.debug) { out.println("====================================== all merge tasks submitted."); }
+        return null; // all merging tasks submitted.
+      }
       
-      if (dstList.size() <= 1) {
-        assert (dstList.size() == 1);
-        if (Main.debug) { out.println("====================================== merge done."); }
-        return null; // merge finished.
-      }
       mergeCascadeIndex++; // go to the next cascade. (1 is the 1st merging cascade).
+      mergeMemoryLoopingIterator.reset();
+      
+      mergeGroupingIterator.reset();
+      mergeGroupingIterator.setGroupSize(1 << (mergeCascadeIndex - 1));
+      
+      cascadeTaskCount = 0;
+      cascadeMergeRangeCovered = 0;
+      
       if (Main.debug) { 
+        out.println(cascadeTaskCount + " pieces merged in current cascade." );
         out.println("================================= cascade " +mergeCascadeIndex+ " started." );
-        out.println("####### " + dstList.size() + " pieces to merge." );
       }
-      assert assertDataListsOkay(dstList);
     }
-  }
-  
-  private boolean assertDataListsOkay(List<Data> listToCheck) {
-    if (listToCheck.size() == 0) {
-      return true;
-    }
-    long expectedStart = 0;
-    for (int i=0; i<listToCheck.size(); i++) {
-      assert listToCheck.get(i).startNumPos == expectedStart;
-      expectedStart += listToCheck.get(i).numLen;
-    }
-    assert expectedStart == totalNumbers;
-    return true;
   }
   
   private ResourceTask nextInCurrentMergeCascade(int id, long alloc, 
-        List<Data> srcList, List<Data> dstList,
+        Range left, Range right,
         FileChannel srcFc, FileChannel dstFc) {
+      assert (left != null);
+      assert (right == null || left.start + left.length == right.start);
       // compose next merge task:
-      Data dLeft = srcList.remove(0);
       // NB: 2nd element may not be present. In such case the merge is simply copying to 
       // the other file:
-      Data dRight = (srcList.size() == 0) ? null : srcList.remove(0);
-      long rightLen = (dRight == null) ? 0 : dRight.numLen; 
+      final long rightLen = (right == null) ? 0 : right.length; 
       // create task:
       ResourceTask task = createMergingTask(id, alloc, 
-          dLeft.startNumPos, dLeft.numLen, rightLen, srcFc, dstFc);
-      // save the positions for future merging:
-      dstList.add(new Data(dLeft.startNumPos, dLeft.numLen + rightLen));
+          left.start, left.length, rightLen, srcFc, dstFc);
       // update:
       mergeTasksSubmited++;
       allocResource -= alloc;
@@ -314,21 +299,21 @@ public class TaskPlannerImpl implements TaskPlanner {
     }
   }
 
-  private ResourceTask createSortingTaskImpl(final int taskId, final long startNumPos, final long numLen) {
-    assert (startNumPos >= 0);
-    assert (numLen > 0);
-    final Resource r = new Resource(numLen);
+  private ResourceTask createSortingTaskImpl(final int taskId, final Range range) {
+    assert (range.start >= 0);
+    assert (range.length > 0);
+    final Resource r = new Resource(range.length);
     if (Main.debug) { 
       out.println("========================== Planned sorting task: ");
       out.println("id         = " + taskId);
-      out.println("start pos  = " + startNumPos);
-      out.println("len        = " + numLen);
+      out.println("start pos  = " + range.start);
+      out.println("len        = " + range.length);
       out.println("==========================");
     }
     return new ResourceTask(taskId, r, true) {
       @Override
       public Void call() throws Exception {
-        InplaceSortDataProvider provider = createProvider(startNumPos, numLen);
+        InplaceSortDataProvider provider = createProvider(range.start, range.length);
         InplaceSort inplaceSort = createInplaceSort(provider);
         
         inplaceSort.sort(); // ** sort
@@ -406,7 +391,7 @@ public class TaskPlannerImpl implements TaskPlanner {
       @Override
       public Void call() throws Exception {
         final BufferedMerger merger = new BufferedMerger(allowedSummaryNumBuffersLength);
-        // NB: start pos equal in both the files.
+        // NB: start pos equal in arc and dst files.
         merger.setLeft(srcFc,  startNumPos, leftNumLen);
         merger.setRight(srcFc, startNumPos + leftNumLen, rightNumLen);
         merger.setTarget(dstFc, startNumPos);

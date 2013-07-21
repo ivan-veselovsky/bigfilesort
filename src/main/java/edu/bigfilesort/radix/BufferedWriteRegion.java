@@ -34,7 +34,7 @@ public class BufferedWriteRegion implements WriteProvider {
     regionNumLength = regNumLength;
     bufferNumLength = bufNumLen;
     if (bufferNumLength > regionNumLength) {
-      throw new IllegalStateException("Unnecessary buffer length");
+      throw new IllegalStateException("Unnecessary buffer length: "+bufferNumLength+" > "+regionNumLength);
     }
     writeCount = 0;
     flushCount = 0;

@@ -14,8 +14,8 @@ public class TestBufferedMerger {
   public void testMerge2() throws Exception {
     final long numLength = 2;
     System.out.println("=============================== " + numLength);
-    final String srcFile = "test-merge-"+numLength+"-src.data";
-    final String dstFile = "test-merge-"+numLength+"-dst.data";
+    final String srcFile = UtilForTest.testDataDir + "/" + "test-merge-"+numLength+"-src.data";
+    final String dstFile = UtilForTest.testDataDir + "/" + "test-merge-"+numLength+"-dst.data";
     
     // write:
     WriteDataMain writeDataMain = new WriteDataMain();
@@ -46,8 +46,8 @@ public class TestBufferedMerger {
   public void testMerge32() throws Exception {
     final long numLength = 32;
     System.out.println("=============================== " + numLength);
-    final String srcFile = "test-merge-"+numLength+"-src.data";
-    final String dstFile = "test-merge-"+numLength+"-dst.data";
+    final String srcFile = UtilForTest.testDataDir + "/" + "test-merge-"+numLength+"-src.data";
+    final String dstFile = UtilForTest.testDataDir + "/" + "test-merge-"+numLength+"-dst.data";
     
     // write:
     WriteDataMain writeDataMain = new WriteDataMain();
@@ -72,8 +72,8 @@ public class TestBufferedMerger {
   public void testMerge128() throws Exception {
     final long numLength = 128;
     System.out.println("=============================== " + numLength);
-    final String srcFile = "test-merge-"+numLength+"-src.data";
-    final String dstFile = "test-merge-"+numLength+"-dst.data";
+    final String srcFile = UtilForTest.testDataDir + "/" + "test-merge-"+numLength+"-src.data";
+    final String dstFile = UtilForTest.testDataDir + "/" + "test-merge-"+numLength+"-dst.data";
     
     // write:
     WriteDataMain writeDataMain = new WriteDataMain();
@@ -99,8 +99,8 @@ public class TestBufferedMerger {
     final long numLength = 1024L * 1024 * 2048;
     final long sumBuffersSize = 1024L * 1024 * 50;
     System.out.println("=============================== " + numLength);
-    final String srcFile = "test-merge-"+numLength+"-src.data";
-    final String dstFile = "test-merge-"+numLength+"-dst.data";
+    final String srcFile = UtilForTest.testDataDir + "/" + "test-merge-"+numLength+"-src.data";
+    final String dstFile = UtilForTest.testDataDir + "/" + "test-merge-"+numLength+"-dst.data";
 
     mergeImpl(sumBuffersSize, srcFile, dstFile, 0, numLength/2, numLength/2);
     
