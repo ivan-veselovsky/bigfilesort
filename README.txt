@@ -1,12 +1,24 @@
-The solution in general follows the initial plan: sorting by independent pieces + merging to auxiliary file. Some tips that may need to be noted:
-- sorting algorithms are: dual pivot quick sort (code borrowed from JDK7) with a fallback to heap sort (instead of merge sort used in JDK7).
-- mapped memory used for sorting and direct memory for merging. Cannot say that there is some special intention under that, rather this just happened to be implemented in such way. Only reason is that direct memory behaves more predictable (at least in terms of max limit). Due to direct memory usage -XX:MaxDirectMemorySize= may need to be adjusted in some cases.
-- Unfortunately I did not find time to incorporate net sorting at the end of the algorithm, however, the tool even in the current state shows satisfactory performance (see data below).
+The solution provides 2 sorting modes: 
+1) radix + statistics sorting (default)
+2) in-place comparison sorting of independent pieces + merging to auxiliary file. (Enabled with "-c" option) 
+Some tips that may need to be noted:
+- sorting algorithms in comparison sorting more are: dual pivot quick sort (code borrowed from JDK7) with a fallback to heap sort (instead of merge sort used in JDK7).
+- mapped memory used for in-place sorting. Direct or mapped memory used for merging and radix data moving as controlled by "-m" option.
+ Experiments show that the performance for the 2 memory variants is different on different systems, so there is the choice. Due to direct memory usage -XX:MaxDirectMemorySize= may need to be adjusted in some cases.
 
-The project is buildable from checkout (mvn clean install -DskipTests). Tests also can be run, but that will take about 6 minutes and will generate some files in the current directory.
- Shell script launchers are present. Command line parameters of the scripts are explained when running them without parameters.
+The project is buildable from checkout (mvn clean install -DskipTests). Tests also can be run, but that will take about 6 minutes.
+Shell script launchers for the sorting program (bigfilesort) as well as data generators and sorting/checksum verifiers are present. 
+Command line parameters of the scripts are explained when running them without parameters.
 
-I carried out the experiments primarily on CentOS 6.3 box (4-core, 16G ram, ordinary hard disk) using JDK6.
+Performance results overview.
+I carried out the experiments primarily on CentOS 6.3 box (4-core, 16G ram, ordinary hard disk) using JDK6, and also on Win-32 (2-core, 2Gb ram) machive.
+
+1) For radix sort (default) good results are observed even on small data files (1G file sorted in ~50 sec on CentOS box). But, what is more important, this sorting method
+shows linear time vs. data file size curve with time coefficient ~3.2min/Gb, as opposed to comparison sort variant that shows N*log(N) curve.
+Parallelling of radix-based solution does not show good benefit: e.g. using 4 threads instead of 1 improves the result only by 10-15%. This is because CPU usage is low, 
+and the bottleneck is IO operations, that are not parallelled well on used environments.
+
+2) For comparison sort algorythms the results are worse for any data files on CentOS machine, but in some cases are better on Windows machine. 
 The following performance data observed on files filled with random data:
  
 threads   max-native (Mb)   sorttime,min:sec file size (bytes)
@@ -41,20 +53,13 @@ Windows-32 (2-core, 2G RAM, JDK7):
 
 Here the "max-native" parameter is maximum amount of (direct + mapped) memory allowed to be used by the program (this is the 3rd command line parameter of "bigfilesort.sh"). This parameter was introduced in order to make the tool more reliable and stable (experience shows that on windows it's impossible to allocate mapped memory larger than some limit, and I don't know where this limit value comes from.)
 
+
 The performance data show that: 
-1) we fit the 1G/15min requirement for single thread: we have even ~5 times better result;
-2) increasing the number of threads from 1 to number of processor cores (4 in my case) increases performance significantly, but further number of threads grows does make the situation even worse;
+1) in any case we fit the 1G/15min requirement for single thread: we have even ~2-18 times better results;
+2) increasing the number of threads from 1 to number of processor cores (4 in my case) increases performance, but not very significantly (not higher than 30-40%). 
 3) The native memory limit does really affect the performance only in case of small values (tens megabytes and lower). (Because that leads to huge number of very small sorting tasks with subsequent merging of these small pieces.)
 
+Note about the comparison algorithms used. 
 The tool was tested on a number of inputs of various length, including ascending, descending, flat and random sequences. In case of ascending, descending and flat pre-sorting the results are much better than the ones for random data because of the heuristics used in sorting algorithms. Random data provide worse performance, but even in this case a fallback from quick-sort to another stable algorithm typically does not happen. If a fallback to HeapSort happens, the performance degrades by 30-50% (due to coefficient ~3*n*log2(n)).
 
-
-
-TODO:
-1) planning: if there are less than num of threads tasks in the current cascade, and we don't start next cascade, give all the available resources to the pending tasks (if they may need more resources). Currently this is not the case, and planner always gives Res/threads resource to each task.
-2) planning: in some cases it is possible to start tasks in the next cascade while current is not yet finished. Consider to implement at least in simple cases.
-3) consider to implement the net sorting in the final stage of the algorythm. The benefit is questionable, should be checked experimentally.
-   Related idea that can be used if only 2 threads are available for one merge task: start the merge from 2 ends in parallel, finish when they meet somewhere in between. This is much simplier than the net sort, but only allows merge paralleling in 2 threads, not more, while net sorting allows paralleling in large number of threads (proportional to the length of merged piece).
-
-4) It looks like in many cases RW operations are much slower (or may become such) than the comparison operations in memory. This leads to the following idea: what if we will merge not pairs of pieces, but "k" sorted pieces at once? In such case we need in O(log2(k)) times more comparison operations for entire merge, but we reduce the number of R/W operations in log2(k) times. If the R/W operations are really the bottleneck, we would optain significant benefit in performance, even thouh general solution assimptotic of N*log2(N) remains the same.
 
