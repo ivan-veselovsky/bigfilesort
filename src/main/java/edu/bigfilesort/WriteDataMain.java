@@ -2,6 +2,7 @@ package edu.bigfilesort;
 
 import static java.lang.System.out;
 
+import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -113,6 +114,9 @@ public class WriteDataMain {
     DivisionResult div = Util.divideNotLonger(fileLength, bufferSizeBytes);
     final long numWrites = div.totalParts();
     final long remainderLength = div.smallerPartLength; 
+
+    File iof = new File(name);
+    iof.getParentFile().mkdirs();
     
     final RandomAccessFile raf = new RandomAccessFile(name, "rw");
     raf.setLength(fileLength);
