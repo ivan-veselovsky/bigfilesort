@@ -116,7 +116,10 @@ public class WriteDataMain {
     final long remainderLength = div.smallerPartLength; 
 
     File iof = new File(name);
-    iof.getParentFile().mkdirs();
+    File pf = iof.getParentFile();
+    if (pf != null) {
+      pf.mkdirs();
+    }
     
     final RandomAccessFile raf = new RandomAccessFile(name, "rw");
     raf.setLength(fileLength);
