@@ -108,7 +108,7 @@ Windows-32 (2-core, 2G RAM, JDK7):
 --------------------------------------------------------------
 
 
-The performance data have showen that: 
+The performance data have shown that: 
 1) in any case we fit the 1G/15min requirement for single thread: we have even ~2-18 times better results;
 2) increasing the number of threads from 1 to number of processor cores (4 in my case) typically increases performance in case of comparison sorting, 
   but does not increase it in case of radix sorting. This seems to be caused by significant difference in CPU usage and low paralleling potential 
