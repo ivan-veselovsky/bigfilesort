@@ -1,3 +1,19 @@
+Task: design and implement stand-alone Java application: multi-threaded binary file sort utility
+>java test.sort.Main <threads number> <input file> <output file>
+Requirements and environment:
+1. Java 1.6+
+2. maximum perm size -XX:MaxPermSize=8m
+3. maximum heap size: 7 + <thread count> MB, e.g. for single thread: -Xmx8m, for 13 threads: -Xmx20m
+4. input file size: from zero bytes up to 100GB; file size is always multiple of four;
+5. input file structure: sequence of 32-bit signed integer numbers in big-endian binary format (without separators or additional markers);
+6. additional allocated disk space should not exceed the input file size;
+7. 1GB input file with random numbers should be processed not longer than 15 minutes;
+8. at finish the output file should contain sorted numbers and there should not be any garbage in memory or file system.
+
+Make performance testing for your application. 
+1. Analyze results for [1, 2, 4, 8, 16, 32, 64] threads x [0B, 4B, 100B, 10kB, 1MB, 100MB, 10GB] files.
+2. Explain results: how performance depends on thread count, internal implementation parameters and possibly other environment conditions.   
+------------------------------------------
 The solution provides 2 sorting modes: 
 1) radix + statistics sorting (default)
 2) in-place comparison sorting of independent pieces + merging to auxiliary file. (Enabled with "-c" option) 
